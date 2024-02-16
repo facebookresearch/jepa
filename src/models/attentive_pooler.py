@@ -76,7 +76,7 @@ class AttentivePooler(nn.Module):
         else:
             rescale(self.cross_attention_block.proj.weight.data, 1)
         if self.blocks is not None:
-            for layer_id, layer in enumerate(1, self.blocks):
+            for layer_id, layer in enumerate(self.blocks, 1):
                 rescale(layer.attn.proj.weight.data, layer_id + 1)
                 rescale(layer.mlp.fc2.weight.data, layer_id + 1)
 
