@@ -1,6 +1,6 @@
 # V-JEPA: Video Joint Embedding Predictive Architecture
 
-Official PyTorch codebase for the *video joint-embedding predictive architecture*, V-JEPA, a method for self-supervised learning of visual representations from video.
+Official PyTorch codebase for the _video joint-embedding predictive architecture_, V-JEPA, a method for self-supervised learning of visual representations from video.
 
 **[Meta AI Research, FAIR](https://ai.facebook.com/research/)**
 
@@ -23,7 +23,7 @@ V-JEPA pretraining is based solely on an unsupervised feature prediction objecti
 
 ## Visualizations
 As opposed to generative methods that have a pixel decoder, V-JEPA has a predictor that makes predictions in latent space.
-We train a conditional diffusion model to decode the V-JEPA feature-space predictions to  interpretable pixels; the pretrained V-JEPA encoder and predictor networks are kept frozen in this process.
+We train a conditional diffusion model to decode the V-JEPA feature-space predictions to interpretable pixels; the pretrained V-JEPA encoder and predictor networks are kept frozen in this process.
 The decoder is only fed the representations predicted for the missing regions of the video, and does not have access to the unmasked regions of the video.
 
 The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal consistency with the unmasked regions of the video.
@@ -96,7 +96,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>80.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/k400-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_k400_16x8x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_k400_16x8x3.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
@@ -107,10 +107,10 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
   </tr>
   <tr>
     <td>ViT-H/16</td>
-    <td>224x224</td>
+    <td>384x384</td>
     <td>81.9</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/k400-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_k400_16x8x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_k400_16x8x3.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -171,7 +171,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
   </tr>
   <tr>
     <td>ViT-H/16</td>
-    <td>224x224</td>
+    <td>384x384</td>
     <td>77.4</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/in1k-probe.pth.tar">attentive probe checkpoint</a></td>
     <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_in1k.yaml">configs</a></td>
@@ -203,7 +203,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
   </tr>
   <tr>
     <td>ViT-H/16</td>
-    <td>224x224</td>
+    <td>384x384</td>
     <td>62.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/places-probe.pth.tar">attentive probe checkpoint</a></td>
     <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_places.yaml">configs</a></td>
@@ -235,7 +235,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
   </tr>
   <tr>
     <td>ViT-H/16</td>
-    <td>224x224</td>
+    <td>384x384</td>
     <td>72.6</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/inat-probe.pth.tar">attentive probe checkpoint</a></td>
     <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_inat.yaml">configs</a></td>
@@ -274,14 +274,14 @@ All experiment parameters are specified in config files (as opposed to command-l
 
 ### Video Datasets
 V-JEPA pretraining and evaluations works with many standard video formats.
-To make a video dataset compatible with the V-JEPA codebase, you simply need to create a ```.csv``` file with the following format, and then specify the path to this csv file in your config.
+To make a video dataset compatible with the V-JEPA codebase, you simply need to create a `.csv` file with the following format, and then specify the path to this csv file in your config.
 ```
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 ...
 ```
-Since V-JEPA is entirely unsupervised, the pretraining code will disregard the ```$integer_class_label``` in the csv file.
+Since V-JEPA is entirely unsupervised, the pretraining code will disregard the `$integer_class_label` in the csv file.
 Thus, feel free to put a random value in this column.
 However, if you wish to run a supervised video classification evaluation on your video dataset, you must replace ```$integer_class_label``` with the ground truth label for each video.
 
