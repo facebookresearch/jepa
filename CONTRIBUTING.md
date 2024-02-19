@@ -1,4 +1,4 @@
-# Contributing to JEPA-Internal
+# Contributing to JEPA
 We want to make contributing to this project as easy and transparent as
 possible.
 
