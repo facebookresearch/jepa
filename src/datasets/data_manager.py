@@ -85,6 +85,7 @@ def init_data(
             num_workers=num_workers,
             world_size=world_size,
             rank=rank,
+            drop_last=drop_last,
             log_dir=log_dir)
 
     return (data_loader, dist_sampler)
