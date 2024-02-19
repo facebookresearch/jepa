@@ -60,18 +60,6 @@ def make_videodataset(
         shared_transform=shared_transform,
         transform=transform)
 
-    log_dir = pathlib.Path(log_dir) if log_dir else None
-    if log_dir:
-        log_dir.mkdir(parents=True, exist_ok=True)
-        # Worker ID will replace '%w'
-        resource_log_filename = log_dir / f'resource_file_{rank}_%w.csv'
-        dataset = MonitoredDataset(
-            dataset=dataset,
-            log_filename=str(resource_log_filename),
-            log_interval=10.,
-            monitor_interval=5.,
-        )
-
     logger.info('VideoDataset dataset created')
     if datasets_weights is not None:
         dist_sampler = DistributedWeightedSampler(
