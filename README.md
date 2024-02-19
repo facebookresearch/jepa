@@ -58,7 +58,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>3072</td>
     <td>VideoMix2M</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/vitl16.pth.tar">checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/pretrain/vitl16.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/pretrain/vitl16.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H</td>
@@ -68,7 +68,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>3072</td>
     <td>VideoMix2M</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/vith16.pth.tar">checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/pretrain/vith16.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/pretrain/vith16.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H</td>
@@ -78,7 +78,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>2400</td>
     <td>VideoMix2M</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/vith16-384.pth.tar">checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/pretrain/vith16_384.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/pretrain/vith16_384.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -96,21 +96,21 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>80.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/k400-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_k400_16x8x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vitl16_k400_16x8x3.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>224x224</td>
     <td>82.0</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/k400-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_k400_16x8x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_k400_16x8x3.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>384x384</td>
     <td>81.9</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/k400-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_k400_16x8x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_384_k400_16x8x3.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -128,21 +128,21 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>69.5</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/ssv2-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_ssv2_16x2x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vitl16_ssv2_16x2x3.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>224x224</td>
     <td>71.4</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/ssv2-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_ssv2_16x2x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_ssv2_16x2x3.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>384x384</td>
     <td>72.2</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/ssv2-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_ssv2_16x2x3.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_384_ssv2_16x2x3.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -160,21 +160,21 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>74.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/in1k-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_in1k.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vitl16_in1k.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>224x224</td>
     <td>75.9</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/in1k-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_in1k.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_in1k.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>384x384</td>
     <td>77.4</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/in1k-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_in1k.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_384_in1k.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -192,21 +192,21 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>60.3</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/places-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_places.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vitl16_places.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>224x224</td>
     <td>61.7</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/places-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_places.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_places.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>384x384</td>
     <td>62.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/places-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_places.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_384_places.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -224,21 +224,21 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
     <td>224x224</td>
     <td>67.8</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vitl16/inat-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vitl16_inat.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vitl16_inat.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>224x224</td>
     <td>67.9</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16/inat-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_inat.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_inat.yaml">configs</a></td>
   </tr>
   <tr>
     <td>ViT-H/16</td>
     <td>384x384</td>
     <td>72.6</td>
     <td><a href="https://dl.fbaipublicfiles.com/jepa/vith16-384/inat-probe.pth.tar">attentive probe checkpoint</a></td>
-    <td><a href="https://github.com/facebookresearch/jepa/blob/master/configs/evals/vith16_384_inat.yaml">configs</a></td>
+    <td><a href="https://github.com/facebookresearch/jepa/blob/main/configs/evals/vith16_384_inat.yaml">configs</a></td>
   </tr>
 </table>
 
@@ -329,7 +329,7 @@ For example, suppose we have a directory called ``my_image_datasets``. We would 
 ### Local training
 If you wish to debug your code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing our results requires launching distributed training.
 
-The single-machine implementation starts from the [app/main.py](appmain.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
+The single-machine implementation starts from the [app/main.py](app/main.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
 For example, to run V-JEPA pretraining on GPUs "0", "1", and "2" on a local machine using the config [configs/pretrain/vitl16.yaml](configs/pretrain/vitl16.yaml), type the command:
 ```bash
 python -m app.main \
@@ -352,31 +352,31 @@ python -m app.main_distributed \
 
 ### Local training
 If you wish to debug your eval code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing the full eval would require launching distributed training.
-The single-machine implementation starts from the [eval/main.py](eval/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
+The single-machine implementation starts from the [evals/main.py](evals/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
 
-For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
+For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/evals/vitl16_in1k.yaml](configs/evals/vitl16_in1k.yaml), type the command:
 ```bash
 python -m evals.main \
-  --fname configs/eval/vitl16_in1k.yaml \
+  --fname configs/evals/vitl16_in1k.yaml \
   --devices cuda:0 cuda:1 cuda:2
 ```
 
 
 ### Distributed training
-To launch a distributed evaluation run, the implementation starts from [eval/main_distributed.py](eval/main_distributed.py), which, in addition to parsing the config file, also allows for specifying details about distributed training. For distributed training, we use the popular open-source [submitit](https://github.com/facebookincubator/submitit) tool and provide examples for a SLURM cluster.
+To launch a distributed evaluation run, the implementation starts from [evals/main_distributed.py](evals/main_distributed.py), which, in addition to parsing the config file, also allows for specifying details about distributed training. For distributed training, we use the popular open-source [submitit](https://github.com/facebookincubator/submitit) tool and provide examples for a SLURM cluster.
 
-For example, to launch a distributed ImageNet image classification experiment using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
+For example, to launch a distributed ImageNet image classification experiment using the config [configs/evals/vitl16_in1k.yaml](configs/evals/vitl16_in1k.yaml), type the command:
 ```bash
 python -m evals.main_distributed \
-  --fname configs/eval/vitl16_in1k.yaml \
+  --fname configs/evals/vitl16_in1k.yaml \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
 
-Similarly, to launch a distributed K400 video classification experiment using the config [configs/eval/vitl16_k400.yaml](configs/eval/vitl16_k400.yaml), type the command:
+Similarly, to launch a distributed K400 video classification experiment using the config [configs/evals/vitl16_k400.yaml](configs/evals/vitl16_k400_16x8x3.yaml), type the command:
 ```bash
 python -m evals.main_distributed \
-  --fname configs/eval/vitl16_k400.yaml \
+  --fname configs/eval/vitl16_k400_16x8x3.yaml \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
