@@ -48,7 +48,7 @@ class FrameAggregation(nn.Module):
 
     def forward(self, x, clip_indices=None):
 
-        # TODO: impement attend_across_segments=False
+        # TODO: implement attend_across_segments=False
         # num_clips = len(x)
         num_views_per_clip = len(x[0])
 
@@ -85,7 +85,7 @@ class FrameAggregation(nn.Module):
 
 class ClipAggregation(nn.Module):
     """
-    Process each clip indepdnently and concatenate all tokens
+    Process each clip independently and concatenate all tokens
     """
 
     def __init__(
