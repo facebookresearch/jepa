@@ -168,7 +168,7 @@ def main(args_eval, resume_preempt=False):
         # Process each frame independently and aggregate
         encoder = FrameAggregation(encoder).to(device)
     else:
-        # Process each video clip independenty and aggregate
+        # Process each video clip independently and aggregate
         encoder = ClipAggregation(
             encoder,
             tubelet_size=tubelet_size,

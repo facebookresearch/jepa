@@ -245,7 +245,7 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
 ## Code Structure
 
 **Config files:**
-All experiment parameters are specified in config files (as opposed to command-line-arguments). See the [configs/](configs/) directory for example config files. Note, before launching an experiment, you must update the paths in the config file to point to your own directories: indicating where to save the logs and checkpoints, and where to find the training data.
+All experiment parameters are specified in config files (as opposed to command-line arguments). See the [configs/](configs/) directory for example config files. Note, before launching an experiment, you must update the paths in the config file to point to your own directories, indicating where to save the logs and checkpoints and where to find the training data.
 
 
 ```
@@ -273,21 +273,21 @@ All experiment parameters are specified in config files (as opposed to command-l
 ## Data preparation
 
 ### Video Datasets
-V-JEPA pretraining and evaluations works with many standard video formats.
-To make a video dataset compatible with the V-JEPA codebase, you simply need to create a `.csv` file with the following format, and then specify the path to this csv file in your config.
+V-JEPA pretraining and evaluations work with many standard video formats.
+To make a video dataset compatible with the V-JEPA codebase, you simply need to create a `.csv` file with the following format and then specify the path to this CSV file in your config.
 ```
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 /absolute_file_path.[mp4, webvid, etc.] $integer_class_label
 ...
 ```
-Since V-JEPA is entirely unsupervised, the pretraining code will disregard the `$integer_class_label` in the csv file.
+Since V-JEPA is entirely unsupervised, the pretraining code will disregard the `$integer_class_label` in the CSV file.
 Thus, feel free to put a random value in this column.
 However, if you wish to run a supervised video classification evaluation on your video dataset, you must replace ```$integer_class_label``` with the ground truth label for each video.
 
 ### Image Datasets
 We use the standard PyTorch ```ImageFolder``` class in our image classification evals.
-Thus, to setup an image dataset for the image classification evaluation, first create a directory to store your image datasets ```$your_directory_containing_image_datasets```.
+Thus, to set up an image dataset for the image classification evaluation, first create a directory to store your image datasets ```$your_directory_containing_image_datasets```.
 Next, download your image datasets into this directory in a format compatible with [PyTorch ImageFolder](https://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html).
 
 For example, suppose we have a directory called ``my_image_datasets``. We would then download our image datasets into this directory so that we end up with the following file tree
@@ -329,9 +329,9 @@ For example, suppose we have a directory called ``my_image_datasets``. We would 
 ### Local training
 If you wish to debug your code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing our results requires launching distributed training.
 
-The single machine implementation starts from the [app/main.py](appmain.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
-For example, to run V-JEPA pretraining on GPUs "0","1", and "2" on a local machine using the config [configs/pretrain/vitl16.yaml](configs/pretrain/vitl16.yaml), type the command:
-```
+The single-machine implementation starts from the [app/main.py](appmain.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
+For example, to run V-JEPA pretraining on GPUs "0", "1", and "2" on a local machine using the config [configs/pretrain/vitl16.yaml](configs/pretrain/vitl16.yaml), type the command:
+```bash
 python -m app.main \
   --fname configs/pretrain/vitl16.yaml \
   --devices cuda:0 cuda:1 cuda:2
@@ -341,7 +341,7 @@ python -m app.main \
 To launch a distributed training run, the implementation starts from [app/main_distributed.py](app/main_distributed.py), which, in addition to parsing the config file, also allows for specifying details about distributed training. For distributed training, we use the popular open-source [submitit](https://github.com/facebookincubator/submitit) tool and provide examples for a SLURM cluster.
 
 For example, to launch a distributed pre-training experiment using the config [configs/pretrain/vitl16.yaml](configs/pretrain/vitl16.yaml), type the command:
-```
+```bash
 python -m app.main_distributed \
   --fname configs/pretrain/vitl16.yaml \
   --folder $path_to_save_stderr_and_stdout \
@@ -352,10 +352,10 @@ python -m app.main_distributed \
 
 ### Local training
 If you wish to debug your eval code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing the full eval would require launching distributed training.
-The single machine implementation starts from the [eval/main.py](eval/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
+The single-machine implementation starts from the [eval/main.py](eval/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
 
-For example, to run ImageNet image classification on GPUs "0","1", and "2" on a local machine using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
-```
+For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
+```bash
 python -m evals.main \
   --fname configs/eval/vitl16_in1k.yaml \
   --devices cuda:0 cuda:1 cuda:2
@@ -366,15 +366,15 @@ python -m evals.main \
 To launch a distributed evaluation run, the implementation starts from [eval/main_distributed.py](eval/main_distributed.py), which, in addition to parsing the config file, also allows for specifying details about distributed training. For distributed training, we use the popular open-source [submitit](https://github.com/facebookincubator/submitit) tool and provide examples for a SLURM cluster.
 
 For example, to launch a distributed ImageNet image classification experiment using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
-```
+```bash
 python -m evals.main_distributed \
   --fname configs/eval/vitl16_in1k.yaml \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
 
-Similarly, to launch a distributed K400 video classificaiton experiment using the config [configs/eval/vitl16_k400.yaml](configs/eval/vitl16_k400.yaml), type the command:
-```
+Similarly, to launch a distributed K400 video classification experiment using the config [configs/eval/vitl16_k400.yaml](configs/eval/vitl16_k400.yaml), type the command:
+```bash
 python -m evals.main_distributed \
   --fname configs/eval/vitl16_k400.yaml \
   --folder $path_to_save_stderr_and_stdout \
@@ -384,14 +384,14 @@ python -m evals.main_distributed \
 ---
 
 ### Setup
-Create a new anaconda environment, activate it, and run the [setup.py](setup.py) script. 
+Create a new Conda environment, activate it, and run the [setup.py](setup.py) script.
 
 ## License
 See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
 
 ## Citation
 If you find this repository useful in your research, please consider giving a star :star: and a citation
-```
+```bibtex
 @article{bardes2024revisiting,
   title={Revisiting Feature Prediction for Learning Visual Representations from Video},
   author={Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Rabbat, Michael, and LeCun, Yann and Assran, Mahmoud and Ballas, Nicolas},
