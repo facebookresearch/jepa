@@ -385,8 +385,13 @@ python -m evals.main_distributed \
 ---
 
 ### Setup
-Create a new Conda environment, activate it, and run the [setup.py](setup.py) script:
-`python setup.py install`
+
+Run:
+```bash
+conda create -n jepa python=3.9 pip
+conda activate jepa
+pip install -e .
+```
 
 ## License
 See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
