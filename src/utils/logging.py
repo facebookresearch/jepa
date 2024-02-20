@@ -106,7 +106,7 @@ def grad_logger(named_params):
 
 
 def adamw_logger(optimizer):
-    """ logging magintude of first and second momentum buffers in adamw """
+    """ logging magnitude of first and second momentum buffers in adamw """
     # TODO: assert that optimizer is instance of torch.optim.AdamW
     state = optimizer.state_dict().get('state')
     exp_avg_stats = AverageMeter()
