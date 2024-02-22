@@ -67,7 +67,7 @@ def make_videodataset(
             dataset.sample_weights,
             num_replicas=world_size,
             rank=rank,
-            shuffle=True)
+            shuffle=shuffle)
     else:
         dist_sampler = torch.utils.data.distributed.DistributedSampler(
             dataset,
