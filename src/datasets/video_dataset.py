@@ -44,6 +44,7 @@ def make_videodataset(
     num_workers=10,
     pin_mem=True,
     duration=None,
+    shuffle=True,
     log_dir=None,
 ):
     dataset = VideoDataset(
@@ -72,7 +73,7 @@ def make_videodataset(
             dataset,
             num_replicas=world_size,
             rank=rank,
-            shuffle=True)
+            shuffle=shuffle)
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
