@@ -472,6 +472,7 @@ def make_dataloader(
     data_loader, _ = init_data(
         data=dataset_type,
         root_path=root_path,
+        training=training,
         transform=transform,
         batch_size=batch_size,
         world_size=world_size,
