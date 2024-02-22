@@ -186,7 +186,7 @@ def main(args_eval, resume_preempt=False):
         num_classes=num_classes,
     ).to(device)
 
-    train_loader = make_dataloader(
+    train_loader, dist_sampler = make_dataloader(
         dataset_type=dataset_type,
         root_path=train_data_path,
         resolution=resolution,
@@ -200,7 +200,7 @@ def main(args_eval, resume_preempt=False):
         world_size=world_size,
         rank=rank,
         training=True)
-    val_loader = make_dataloader(
+    val_loader, _ = make_dataloader(
         dataset_type=dataset_type,
         root_path=val_data_path,
         resolution=resolution,
@@ -259,6 +259,9 @@ def main(args_eval, resume_preempt=False):
     # TRAIN LOOP
     for epoch in range(start_epoch, num_epochs):
         logger.info('Epoch %d' % (epoch + 1))
+
+        dist_sampler.set_epoch(epoch)
+
         train_acc = run_one_epoch(
             device=device,
             training=True,
@@ -469,7 +472,7 @@ def make_dataloader(
         crop_size=resolution,
     )
 
-    data_loader, _ = init_data(
+    return init_data(
         data=dataset_type,
         root_path=root_path,
         transform=transform,
@@ -485,7 +488,6 @@ def make_dataloader(
         copy_data=False,
         drop_last=False,
         subset_file=subset_file)
-    return data_loader
 
 
 def init_model(
