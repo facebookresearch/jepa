@@ -390,7 +390,7 @@ Run:
 ```bash
 conda create -n jepa python=3.9 pip
 conda activate jepa
-pip install -e .
+python setup.py install
 ```
 
 ## License
