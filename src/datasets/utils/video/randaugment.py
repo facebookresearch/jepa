@@ -7,8 +7,8 @@
 
 """
 This implementation is based on
-https://github.com/rwightman/pytorch-image-models/blob/master/timm/data/auto_augment.py
-pulished under an Apache License 2.0.
+https://github.com/huggingface/pytorch-image-models/blob/main/timm/data/auto_augment.py
+published under an Apache License 2.0.
 """
 
 import math
