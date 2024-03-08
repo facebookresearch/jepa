@@ -352,7 +352,11 @@ python -m app.main_distributed \
 ## Launching Evaluations
 
 ### Local training
+<<<<<<< HEAD
 If you wish to debug your eval code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing the full eval would require launching distributed training.
+=======
+If you wish to debug your eval code or setup before launching a distributed training run, we provide the functionality to do so by running the evaluation script locally on a multi-GPU (or single-GPU) machine, however, reproducing the full eval would require launching distributed training.
+>>>>>>> origin/main
 The single-machine implementation starts from the [evals/main.py](evals/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
 
 For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/evals/vitl16_in1k.yaml](configs/evals/vitl16_in1k.yaml), type the command:
@@ -385,8 +389,13 @@ python -m evals.main_distributed \
 ---
 
 ### Setup
-Create a new Conda environment, activate it, and run the [setup.py](setup.py) script:
-`python setup.py install`
+
+Run:
+```bash
+conda create -n jepa python=3.9 pip
+conda activate jepa
+python setup.py install
+```
 
 ## License
 See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
