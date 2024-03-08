@@ -374,7 +374,7 @@ python -m evals.main_distributed \
   --partition $slurm_partition
 ```
 
-Similarly, to launch a distributed K400 video classification experiment using the config [configs/evals/vitl16_k400.yaml](configs/evals/vitl16_k400.yaml), type the command:
+Similarly, to launch a distributed K400 video classification experiment using the config [configs/evals/vitl16_k400_16x8x3.yaml](configs/evals/vitl16_k400_16x8x3.yaml), type the command:
 ```bash
 python -m evals.main_distributed \
   --fname configs/evals/vitl16_k400_16x8x3.yaml \
