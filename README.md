@@ -353,7 +353,7 @@ python -m app.main_distributed \
 
 ### Local training
 If you wish to debug your eval code or setup before launching a distributed training run, we provide the functionality to do so by running the evaluation script locally on a multi-GPU (or single-GPU) machine, however, reproducing the full eval would require launching distributed training.
-The single-machine implementation starts from the [eval/main.py](eval/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
+The single-machine implementation starts from the [evals/main.py](evals/main.py), which parses the experiment config file and runs the eval locally on a multi-GPU (or single-GPU) machine.
 
 For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
 ```bash
