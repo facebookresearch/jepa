@@ -15,7 +15,7 @@ import yaml
 
 import submitit
 
-from evals.scaffold import main as eval_main
+from jepa.evals.scaffold import main as eval_main
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
