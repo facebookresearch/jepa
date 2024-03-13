@@ -20,7 +20,7 @@ from src.masks.utils import apply_masks
 from huggingface_hub import PyTorchModelHubMixin
 
 
-class VisionTransformer(nn.Module, PyTorchModelHubMixin):
+class VisionTransformer(nn.Module, PyTorchModelHubMixin, library_name="v-jepa", tags=["video-embeddings"], repo_url="https://github.com/facebookresearch/jepa"):
     """ Vision Transformer """
     def __init__(
         self,
