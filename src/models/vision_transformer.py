@@ -44,7 +44,7 @@ class VisionTransformer(nn.Module, PyTorchModelHubMixin):
     ):
         super().__init__()
 
-        norm_layer = partial(norm_layer, eps=1e-6)
+        norm_layer = partial(nn.LayerNorm, eps=1e-6)
         self.num_features = self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.out_layers = out_layers
