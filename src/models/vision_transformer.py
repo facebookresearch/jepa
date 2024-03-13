@@ -37,6 +37,7 @@ class VisionTransformer(nn.Module, PyTorchModelHubMixin, library_name="v-jepa", 
         qk_scale=None,
         drop_rate=0.0,
         attn_drop_rate=0.0,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6), 
         init_std=0.02,
         out_layers=None,
         uniform_power=False,
@@ -44,7 +45,6 @@ class VisionTransformer(nn.Module, PyTorchModelHubMixin, library_name="v-jepa", 
     ):
         super().__init__()
 
-        norm_layer = partial(nn.LayerNorm, eps=1e-6)
         self.num_features = self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.out_layers = out_layers
@@ -252,49 +252,49 @@ class VisionTransformer(nn.Module, PyTorchModelHubMixin, library_name="v-jepa", 
 def vit_tiny(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=192, depth=12, num_heads=3, mlp_ratio=4,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_small(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=384, depth=12, num_heads=6, mlp_ratio=4,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_base(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=768, depth=12, num_heads=12, mlp_ratio=4,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_large(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=1024, depth=24, num_heads=16, mlp_ratio=4,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_huge(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=1280, depth=32, num_heads=16, mlp_ratio=4,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_giant(patch_size=16, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=1408, depth=40, num_heads=16, mlp_ratio=48/11,
-        qkv_bias=True, **kwargs)
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
 
 
 def vit_gigantic(patch_size=14, **kwargs):
     model = VisionTransformer(
         patch_size=patch_size, embed_dim=1664, depth=48, num_heads=16, mpl_ratio=64/13,
-        qkv_bias=True, **kwargs
+        qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs
     )
     return model
 
