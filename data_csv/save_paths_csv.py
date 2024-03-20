@@ -21,5 +21,5 @@ df = pd.DataFrame({
 })
 
 # 保存到 CSV 文件
-csv_file_path = '/beacon/data01/chengjie.zheng001/code/MGH/umb-jepa/data_csv/k700_train2.csv'
+csv_file_path = '/beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train.csv'
 df.to_csv(csv_file_path, index=False)
