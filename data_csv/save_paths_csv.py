@@ -4,7 +4,7 @@ import random
 import os
 
 # 指定目录路径
-directory_path = '/beacon/data01/chengjie.zheng001/00_datasets/kinetics-dataset/k700-2020/val'
+directory_path = '/beacon/data01/chengjie.zheng001/data/kinetics-dataset/k700-2020/train/'
 
 # 使用 glob 查找所有的 mp4 文件
 mp4_files = glob.glob(os.path.join(directory_path, '**/*.mp4'), recursive=True)
@@ -21,5 +21,5 @@ df = pd.DataFrame({
 })
 
 # 保存到 CSV 文件
-csv_file_path = '/beacon/data01/chengjie.zheng001/code/MGH/jepa/data_csv/k700_val.csv'
+csv_file_path = '/beacon/data01/chengjie.zheng001/code/MGH/umb-jepa/data_csv/k700_train2.csv'
 df.to_csv(csv_file_path, index=False)
