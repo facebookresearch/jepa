@@ -4,7 +4,9 @@ import random
 import os
 
 # 定义目标文件夹路径
-directory_path = '/beacon/data01/chengjie.zheng001/data/kinetics-dataset/k700-2020/train/'
+# directory_path = '/beacon/data01/chengjie.zheng001/data/kinetics-dataset/k700-2020/train/'
+directory_path = '/beacon/data01/chengjie.zheng001/data/kinetics-dataset/k700-2020/val/'
+
 
 # 定义支持的文件扩展名
 extensions = ['mp4']
@@ -18,7 +20,7 @@ for ext in extensions:
 labels = [random.randint(0, 100) for _ in files]
 
 # CSV 文件保存路径
-csv_file_path = '/beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train.csv'
+csv_file_path = '/beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_val.csv'
 
 # 保存到 CSV 文件
 with open(csv_file_path, 'w', newline='') as csvfile:
