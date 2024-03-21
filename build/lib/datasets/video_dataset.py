@@ -128,9 +128,7 @@ class VideoDataset(torch.utils.data.Dataset):
         for data_path in self.data_paths:
 
             if data_path[-4:] == '.csv':
-                ### 改
-                data = pd.read_csv(data_path, header=None, delimiter=" ", on_bad_lines='skip')
-                # data = pd.read_csv(data_path, header=None, delimiter=" ")
+                data = pd.read_csv(data_path, header=None, delimiter=" ")
                 samples += list(data.values[:, 0])
                 labels += list(data.values[:, 1])
                 num_samples = len(data)

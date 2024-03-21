@@ -1,2 +1,5 @@
-.*.swp
+*.swp
 *.pyc
+*.csv
+logs/
+logs2/
