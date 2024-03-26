@@ -360,6 +360,8 @@ def main(args, resume_preempt=False):
                 loader = iter(unsupervised_loader)
                 udata = next(loader)
 
+    logger.info(f"Cuda summary:\n{torch.cuda.memory_summary()}")
+
     # -- TRAINING LOOP
     for epoch in range(start_epoch, num_epochs):
         logger.info('Epoch %d' % (epoch + 1))

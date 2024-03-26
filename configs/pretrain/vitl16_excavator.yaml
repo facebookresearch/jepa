@@ -1,16 +1,16 @@
 app: vjepa
-nodes: 16
-tasks_per_node: 8
+nodes: 1
+tasks_per_node: 8 # 8 
 data:
   dataset_type: VideoDataset
   datasets:
     - /cluster/home/vschorp/self_supervised_bucket/data/youtube_data_scrape/clips_letsdig/all_clip_paths.csv
   decode_one_clip: true
-  batch_size: 24
+  batch_size: 8 # 24
   num_clips: 1
   num_frames: 16
   tubelet_size: 2
-  sampling_rate: 4
+  sampling_rate: 1 # 4
   crop_size: 224
   patch_size: 16
   pin_mem: true
@@ -60,11 +60,12 @@ mask:
     max_keep: null
 meta:
   load_checkpoint: true
-  read_checkpoint: /cluster/home/vschorp/self_supervised_bucket/data/checkpoints/vitl16.pth.tar
+  read_checkpoint: vitl16.pth.tar
   seed: 234
   eval_freq: 100
   use_sdpa: true
-  dtype: bfloat16
+  dtype: float16 # bfloat16
+  save_every_freq: 25
 model:
   model_name: vit_large
   pred_depth: 12
@@ -73,15 +74,15 @@ model:
   use_mask_tokens: true
   zero_init_mask_tokens: true
 optimization:
-  ipe: 300
+  ipe: 15000 # 30k for 4 gpus, 15k if 8 gpus, orig 300
   ipe_scale: 1.25
   clip_grad: 10.0
   weight_decay: 0.04
   final_weight_decay: 0.4
-  epochs: 300
+  epochs: 600 # 300
   warmup: 40
-  start_lr: 0.0002
-  lr: 0.000625
+  start_lr: 0.00002 # 0.0002
+  lr: 0.0000625 # 0.000625
   final_lr: 1.0e-06
   ema:
   - 0.998

@@ -3,3 +3,4 @@
 build/
 dist/
 *.egg-info
+log_pretraining.txt

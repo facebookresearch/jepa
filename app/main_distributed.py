@@ -35,7 +35,7 @@ parser.add_argument(
     help='yaml file containing config file names to launch',
     default='configs.yaml')
 parser.add_argument(
-    '--partition', type=str,
+    '--partition', type=str, default=None,
     help='cluster partition to submit jobs on')
 parser.add_argument(
     '--time', type=int, default=4300,
@@ -80,12 +80,13 @@ def launch_app_with_parsed_args(
         folder=os.path.join(submitit_folder, 'job_%j'),
         slurm_max_num_timeout=20)
     executor.update_parameters(
-        slurm_partition=partition,
-        slurm_mem_per_gpu='55G',
+        # slurm_partition=partition,
+        # slurm_mem_per_gpu='20G',
+        slurm_gpus="rtx_4090",
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
-        cpus_per_task=12,
+        cpus_per_task=4,
         gpus_per_node=tasks_per_node)
 
     if args.exclude is not None:
