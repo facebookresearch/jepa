@@ -7,11 +7,11 @@ data:
   #  - /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train_2.csv
     - '/beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/MGH_train.csv'
   decode_one_clip: true
-  batch_size: 6
+  batch_size: 3
   num_clips: 1
-  num_frames: 16
+  num_frames: 32
   tubelet_size: 2
-  sampling_rate: 4
+  sampling_rate: 2
   crop_size: 224
   patch_size: 16
   pin_mem: true
@@ -19,7 +19,7 @@ data:
   filter_short_videos: false
   clip_duration: null
 data_aug:
-  auto_augment: false
+  auto_augment: true
   motion_shift: false
   random_resize_aspect_ratio:
   - 0.75
@@ -29,7 +29,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/logs/
+  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/log_mgh/exp1/
   write_tag: jepa
 loss:
   loss_exp: 1.0
