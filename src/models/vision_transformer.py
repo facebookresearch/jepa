@@ -17,8 +17,10 @@ from src.models.utils.pos_embs import get_2d_sincos_pos_embed, get_3d_sincos_pos
 from src.utils.tensors import trunc_normal_
 from src.masks.utils import apply_masks
 
+from huggingface_hub import PyTorchModelHubMixin
 
-class VisionTransformer(nn.Module):
+
+class VisionTransformer(nn.Module, PyTorchModelHubMixin, library_name="v-jepa", tags=["video-feature-extraction"], repo_url="https://github.com/facebookresearch/jepa"):
     """ Vision Transformer """
     def __init__(
         self,
@@ -35,7 +37,7 @@ class VisionTransformer(nn.Module):
         qk_scale=None,
         drop_rate=0.0,
         attn_drop_rate=0.0,
-        norm_layer=nn.LayerNorm,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6), 
         init_std=0.02,
         out_layers=None,
         uniform_power=False,
