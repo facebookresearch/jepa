@@ -11,4 +11,4 @@ decord
 pandas
 einops
 beartype
-git+https://github.com/huggingface/huggingface_hub.git
+huggingface_hub>=0.22.1
