@@ -15,7 +15,7 @@ import yaml
 
 import submitit
 
-from jepa.evals.scaffold import main as eval_main
+from evals.scaffold import main as eval_main
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
@@ -91,12 +91,19 @@ def launch_evals_with_parsed_args(
         slurm_max_num_timeout=20)
     executor.update_parameters(
         slurm_partition=partition,
-        slurm_mem_per_gpu='55G',
+        mem='55G',
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
-        cpus_per_task=12,
-        gpus_per_node=tasks_per_node)
+        cpus_per_task=8,
+        gpus_per_node=tasks_per_node,
+	setup = ["module purge",
+		"module load anaconda3/2020.07",
+		"export OMP_NUM_THREADS=1",
+		"source /share/apps/anaconda3/2020.07/etc/profile.d/conda.sh",
+		"conda activate ./env-jepa",
+		"export PATH=./env-jepa/bin:$PATH",
+		"mkdir /scratch/ki2130/peanut_butter"])
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
@@ -160,3 +167,5 @@ def launch_evals():
 if __name__ == '__main__':
     args = parser.parse_args()
     launch_evals()
+    print("made it!")
+
