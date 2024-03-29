@@ -4,10 +4,9 @@ tasks_per_node: 8
 data:
   dataset_type: VideoDataset
   datasets:
-  #  - /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train_2.csv
-    - '/beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/MGH_train.csv'
+    - /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train_2.csv
   decode_one_clip: true
-  batch_size: 6
+  batch_size: 24
   num_clips: 1
   num_frames: 16
   tubelet_size: 2
@@ -29,7 +28,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/logs/
+  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/log_k700/exp2_e300/
   write_tag: jepa
 loss:
   loss_exp: 1.0

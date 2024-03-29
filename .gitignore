@@ -1,9 +1,6 @@
 *.swp
 *.pyc
 *.csv
-logs/
-logs2/
-logs3/
-logs4/
+log_k700/
 log_mgh/
 data_csv/

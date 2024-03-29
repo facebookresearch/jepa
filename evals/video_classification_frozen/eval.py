@@ -329,7 +329,7 @@ def run_one_epoch(
             ]
             clip_indices = [d.to(device, non_blocking=True) for d in data[2]]
             ### AIR Test1
-            print(data[1])
+            # print(data[1])
             # tensor_data_1 = torch.tensor(data[1], dtype=torch.float32)
             # print(type(tensor_data_1))
             labels = data[1].to(device)

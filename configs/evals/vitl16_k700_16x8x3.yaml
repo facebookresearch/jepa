@@ -7,7 +7,7 @@ data:
   dataset_train: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_train_2.csv
   dataset_val: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/data_csv/k700_val_2.csv
   dataset_type: VideoDataset
-  num_classes: 400
+  num_classes: 700
   frames_per_clip: 16
   num_segments: 8
   num_views_per_segment: 3
@@ -34,6 +34,6 @@ pretrain:
   tight_silu: false
   use_sdpa: true
   patch_size: 16
-  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/logs2/
+  folder: /beacon/data01/chengjie.zheng001/Projects/MGH/umb-jepa/log_k700/exp2_e300/
   checkpoint: jepa-latest.pth.tar  # name of pretrained model file inside folder
   write_tag: jepa
