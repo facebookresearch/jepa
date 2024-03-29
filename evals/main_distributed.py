@@ -91,19 +91,15 @@ def launch_evals_with_parsed_args(
         slurm_max_num_timeout=20)
     executor.update_parameters(
         slurm_partition=partition,
-        mem='55G',
+        slurm_mem='55G',
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
         cpus_per_task=8,
         gpus_per_node=tasks_per_node,
-	setup = ["module purge",
-		"module load anaconda3/2020.07",
-		"export OMP_NUM_THREADS=1",
-		"source /share/apps/anaconda3/2020.07/etc/profile.d/conda.sh",
-		"conda activate ./env-jepa",
-		"export PATH=./env-jepa/bin:$PATH",
-		"mkdir /scratch/ki2130/peanut_butter"])
+	slurm_mail_type='ALL',
+	slurm_mail_user='ki2130@nyu.edu',
+	slurm_job_name='child-video-jepa2')
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
