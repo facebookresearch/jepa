@@ -4,8 +4,8 @@ tag: k400-16x8x3
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
-  dataset_train: /scratch/ki2130/my-jepa/jepa/mini_train.csv
-  dataset_val: /scratch/ki2130/my-jepa/jepa/mini_test.csv
+  dataset_train: /scratch/ki2130/my-jepa/jepa/p_mini_train.csv
+  dataset_val: /scratch/ki2130/my-jepa/jepa/p_mini_test.csv
   dataset_type: VideoDataset
   num_classes: 400
   frames_per_clip: 16
@@ -14,7 +14,7 @@ data:
   frame_step: 4
 optimization:
   attend_across_segments: true
-  num_epochs: 20
+  num_epochs: 3
   resolution: 224
   batch_size: 4
   weight_decay: 0.01
