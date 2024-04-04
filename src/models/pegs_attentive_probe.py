@@ -18,7 +18,7 @@ from src.models.utils.modules import (
 from src.utils.tensors import trunc_normal_
 
 
-class AttentivePooler(nn.Module):
+class PegAttentivePooler(nn.Module):
     """ Attentive Pooler """
     def __init__(
         self,
@@ -102,7 +102,7 @@ class AttentivePooler(nn.Module):
         return q
 
 
-class AttentiveClassifier(nn.Module):
+class PegAttentiveClassifier(nn.Module):
     """ Attentive Classifier """
     def __init__(
         self,
@@ -113,11 +113,11 @@ class AttentiveClassifier(nn.Module):
         norm_layer=nn.LayerNorm,
         init_std=0.02,
         qkv_bias=True,
-        num_classes=1000,
+        num_classes=165,
         complete_block=True,
     ):
         super().__init__()
-        self.pooler = AttentivePooler(
+        self.pooler = PegAttentivePooler(
             num_queries=1,
             embed_dim=embed_dim,
             num_heads=num_heads,
