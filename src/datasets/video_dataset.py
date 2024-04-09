@@ -142,6 +142,12 @@ class VideoDataset(torch.utils.data.Dataset):
                 num_samples = len(data)
                 self.num_samples_per_dataset.append(len(data))
 
+            elif data_path[-11:] == '_directory/':
+                samples = [file for file in os.listdir(data_path) if file.endswith('.mp4')]
+                labels = [np.load(file) for file in os.listdir(data_path) if file.endswith('.npy')]
+                num_samples = len(samples)
+                self.num_samples_per_dataset.append(num_samples)
+
         # [Optional] Weights for each sample to be used by downstream
         # weighted video sampler
         self.sample_weights = None
