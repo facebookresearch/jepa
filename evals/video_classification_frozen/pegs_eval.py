@@ -29,7 +29,7 @@ import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel
 
 import src.models.vision_transformer as vit
-from src.models.attentive_pooler import AttentiveClassifier
+from src.models.pegs_attentive_probe import PegAttentiveClassifier
 from src.datasets.data_manager import (
     init_data,
 )
@@ -179,10 +179,8 @@ def main(args_eval, resume_preempt=False):
         p.requires_grad = False
 
     # -- init classifier
-    classifier = AttentiveClassifier(
+    classifier = PegAttentiveClassifier(
         embed_dim=encoder.embed_dim,
-        num_heads=encoder.num_heads,
-        depth=1,
         num_classes=num_classes,
     ).to(device)
 
@@ -330,21 +328,25 @@ def run_one_epoch(
             clip_indices = [d.to(device, non_blocking=True) for d in data[2]]
             labels = data[1].to(device)
             batch_size = len(labels)
-
+            
+            print("training",training)
             # Forward and prediction
             with torch.no_grad():
                 outputs = encoder(clips, clip_indices)
                 if not training:
                     if attend_across_segments:
                         outputs = [classifier(o) for o in outputs]
+                        print("outputs shape", outputs[0].shape)
                     else:
                         outputs = [[classifier(ost) for ost in os] for os in outputs]
+                        print("ouputs shape", outputs[0].shape)
             if training:
                 if attend_across_segments:
                     outputs = [classifier(o) for o in outputs]
                 else:
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
-
+        print("outputs shape", outputs[0].shape)
+        print("labels shape:", labels[0].shape)
         # Compute loss
         if attend_across_segments:
             loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
