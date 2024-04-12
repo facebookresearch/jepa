@@ -1,2 +1,10 @@
 .*.swp
 *.pyc
+*.tar
+
+bin/
+dist/
+.vscode/
+logs/
+
+jepa_src/jepa.egg-info/

@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: vjepa-encoder
+Version: 0.0.2
+Summary: JEPA research code.
+Author: Jonathan Koch
+Author-email: johnnykoch02@gmail.com
+Requires-Python: >=3.9
+License-File: LICENSE
+Requires-Dist: pyyaml
+Requires-Dist: numpy
+Requires-Dist: opencv-python
+Requires-Dist: submitit
+Requires-Dist: braceexpand
+Requires-Dist: webdataset
+Requires-Dist: timm
+Requires-Dist: decord
+Requires-Dist: pandas
+Requires-Dist: einops
+Requires-Dist: beartype
