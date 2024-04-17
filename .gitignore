@@ -1,6 +1,6 @@
 .*.swp
 *.pyc
-# *.tar
+*.tar
 
 bin/
 dist/
