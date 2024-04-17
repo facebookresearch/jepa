@@ -30,20 +30,20 @@ from torch.nn.parallel import DistributedDataParallel
 
 from timm.data import create_transform as timm_make_transforms
 
-import src.models.vision_transformer as vit
-from src.models.attentive_pooler import AttentiveClassifier
-from src.datasets.data_manager import (
+import jepa_src.models.vision_transformer as vit
+from jepa_src.models.attentive_pooler import AttentiveClassifier
+from jepa_src.datasets.data_manager import (
     init_data,
 )
-from src.utils.distributed import (
+from jepa_src.utils.distributed import (
     init_distributed,
     AllReduce
 )
-from src.utils.schedulers import (
+from jepa_src.utils.schedulers import (
     WarmupCosineSchedule,
     CosineWDSchedule,
 )
-from src.utils.logging import (
+from jepa_src.utils.logging import (
     AverageMeter,
     CSVLogger
 )

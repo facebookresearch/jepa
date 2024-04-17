@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+jepa_encoder.egg-info/PKG-INFO
+jepa_encoder.egg-info/SOURCES.txt
+jepa_encoder.egg-info/dependency_links.txt
+jepa_encoder.egg-info/requires.txt
+jepa_encoder.egg-info/top_level.txt
+vjepa_encoder/__init__.py
+vjepa_encoder/vision_encoder.py

@@ -13,7 +13,7 @@ import yaml
 import submitit
 
 from app.scaffold import main as app_main
-from src.utils.logging import get_logger
+from jepa_src.utils.logging import get_logger
 
 logger = get_logger(force=True)
 
