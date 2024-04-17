@@ -7,7 +7,7 @@ The VJEPA Encoder is a Python package that provides an implementation of the enc
 To install the VJEPA Encoder package, you can use pip:
 
 ```
-pip install vjepa_encoder
+pip install vjepa-encoder
 ```
 
 ## Usage
