@@ -20,3 +20,5 @@ print(embedding.shape)
 embedding = encoder.embed_image(x)
 print(embedding)
 print(embedding.shape)
+
+encoder.save_checkpoint("./test_jepa_model.tar")

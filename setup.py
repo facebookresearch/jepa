@@ -7,7 +7,7 @@
 import os
 from setuptools import setup
 
-VERSION = "0.0.4"
+VERSION = "0.1.1"
 
 from setuptools import setup, find_packages
 

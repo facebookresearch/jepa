@@ -29,7 +29,7 @@ import torch
 import torch.multiprocessing as mp
 import torch.nn.functional as F
 # from torch.nn.parallel import DistributedDataParallel
-from jepa_src.utils.distributed import init_distributed, AllReduce
+from jepa_src.utils.distributed import init_distributed
 from jepa_src.utils.logging import get_logger
 
 from vjepa_encoder.vjepa.utils import init_video_model
@@ -44,8 +44,6 @@ np.random.seed(_GLOBAL_SEED)
 torch.manual_seed(_GLOBAL_SEED)
 torch.backends.cudnn.benchmark = True
 
-from jepa_src.models.vision_transformer import VIT_EMBED_DIMS as JEPA_DIM_SIZE
-
 import logging
 from jepa_src.utils.logging import get_logger
 logger = get_logger(force=True)
@@ -56,6 +54,17 @@ class JepaEncoder(nn.Module):
         super().__init__()
         self.args = args
         self.encoder, self.predictor = None, None
+
+    def save_checkpoint(self, path):
+        save_dict = {
+            'encoder': self.encoder.state_dict(),
+        }
+        try:
+            torch.save(save_dict, path)
+            logger.info(f'Saved encoder state to {path}')
+
+        except Exception as e:
+            logger.info(f'Encountered exception when saving checkpoint: {e}')
 
     def preprocess_image(self, input_data: Any):
         """
@@ -192,7 +201,7 @@ class JepaEncoder(nn.Module):
             # -- loading encoder
             pretrained_dict = checkpoint['encoder']
             msg = encoder.load_state_dict(pretrained_dict)
-            logger.info(f'loaded pretrained encoder from epoch {epoch} with msg: {msg}')
+            logger.info(f'loaded pretrained encoder from {r_path} with msg: {msg}')
 
         except Exception as e:
             logger.info(f'Encountered exception when loading checkpoint {e}')
