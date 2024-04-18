@@ -1,0 +1,65 @@
+app: vjepa
+data:
+  crop_size: 224
+  decode_one_clip: true
+  filter_short_videos: false
+  num_clips: 1
+  num_frames: 16
+  num_workers: 4
+  patch_size: 16
+  pin_mem: true
+  sampling_rate: 4
+  tubelet_size: 1
+data_aug:
+  auto_augment: false
+  motion_shift: false
+  random_resize_aspect_ratio:
+  - 0.75
+  - 1.35
+  random_resize_scale:
+  - 0.3
+  - 1.0
+  reprob: 0.0
+logging:
+  folder: /media/rpal/Drive_10TB/John/jepa/logs
+  write_tag: jepa
+mask:
+- aspect_ratio:
+  - 0.75
+  - 1.5
+  max_keep: null
+  max_temporal_keep: 1.0
+  num_blocks: 8
+  spatial_scale:
+  - 0.15
+  - 0.15
+  temporal_scale:
+  - 1.0
+  - 1.0
+- aspect_ratio:
+  - 0.75
+  - 1.5
+  max_keep: null
+  max_temporal_keep: 1.0
+  num_blocks: 2
+  spatial_scale:
+  - 0.7
+  - 0.7
+  temporal_scale:
+  - 1.0
+  - 1.0
+meta:
+  dtype: bfloat16
+  eval_freq: 100
+  load_checkpoint: true
+  read_checkpoint: /media/rpal/Drive_10TB/John/jepa/huggingface/jepa-latest.pth.tar
+  save_every_freq: 5
+  seed: 234
+  use_sdpa: true
+model:
+  model_name: vit_large
+  pred_depth: 12
+  pred_embed_dim: 384
+  uniform_power: true
+  use_mask_tokens: true
+  zero_init_mask_tokens: true

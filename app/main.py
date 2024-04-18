@@ -13,7 +13,7 @@ import pprint
 import yaml
 
 from app.scaffold import main as app_main
-from src.utils.distributed import init_distributed
+from jepa_src.utils.distributed import init_distributed
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -30,7 +30,7 @@ def process_main(rank, fname, world_size, devices):
     os.environ['CUDA_VISIBLE_DEVICES'] = str(devices[rank].split(':')[-1])
 
     import logging
-    from src.utils.logging import get_logger
+    from jepa_src.utils.logging import get_logger
     logger = get_logger(force=True)
     if rank == 0:
         logger.setLevel(logging.INFO)

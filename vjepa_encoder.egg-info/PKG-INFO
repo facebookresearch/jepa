@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: vjepa-encoder
+Version: 0.1.1
+Summary: JEPA research code.
+Author: Jonathan Koch
+Author-email: johnnykoch02@gmail.com
+Requires-Python: >=3.7
+License-File: LICENSE
