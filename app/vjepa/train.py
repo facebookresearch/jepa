@@ -381,10 +381,14 @@ def main(args, resume_preempt=False):
 
             try:
                 udata, masks_enc, masks_pred = next(loader)
-            except Exception:
-                logger.info('Exhausted data loaders. Refreshing...')
-                loader = iter(unsupervised_loader)
-                udata, masks_enc, masks_pred = next(loader)
+            
+            except StopIteration:
+                logger.info('Exhausted data loaders before completing all planned iterations. Ending epoch early...')
+                break  # Exit the current epoch loop if there are no more data points to process
+            # except Exception:
+            #     logger.info('Exhausted data loaders. Refreshing...')
+            #     loader = iter(unsupervised_loader)
+            #     udata, masks_enc, masks_pred = next(loader)
             assert len(masks_enc) == len(masks_pred), \
                 'Currently require num encoder masks = num predictor masks'
 
