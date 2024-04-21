@@ -329,24 +329,28 @@ def run_one_epoch(
             labels = data[1].to(device)
             batch_size = len(labels)
             
-            print("training",training)
+            print("is it training?",training)
+
             # Forward and prediction
             with torch.no_grad():
                 outputs = encoder(clips, clip_indices)
+                print("outputs with encoder applied to clips and clips indices shape:", outputs[0].shape)
                 if not training:
                     if attend_across_segments:
                         outputs = [classifier(o) for o in outputs]
-                        print("outputs shape", outputs[0].shape)
+                        #print("outputs shape", outputs[0].shape)
                     else:
                         outputs = [[classifier(ost) for ost in os] for os in outputs]
-                        print("ouputs shape", outputs[0].shape)
+                        #print("ouputs shape", outputs[0].shape)
             if training:
                 if attend_across_segments:
                     outputs = [classifier(o) for o in outputs]
+                    print("outputs attend:", outputs[0].shape)
                 else:
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
-        print("outputs shape", outputs[0].shape)
-        print("labels shape:", labels[0].shape)
+                    print("outputs NOT attend:", outputs[0].shape)
+        print("outputs final shape", outputs[0].shape)
+        print("labels final shape:", labels[0].shape)
         # Compute loss
         if attend_across_segments:
             loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)

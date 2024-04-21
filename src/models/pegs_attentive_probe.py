@@ -17,9 +17,10 @@ class PegAttentiveClassifier(nn.Module):
         num_classes=165
     ):
         super().__init__()
-        self.linear = nn.Linear(embed_dim, num_classes, bias=True)
+        self.linear = nn.Linear(embed_dim, num_classes, bias=False)
 
     def forward(self, x):
+        print("input to classifier x shape:", x.shape)
         x = self.linear(x)
         return x
 
