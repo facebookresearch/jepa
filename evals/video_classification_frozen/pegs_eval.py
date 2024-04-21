@@ -52,6 +52,8 @@ from evals.video_classification_frozen.utils import (
     FrameAggregation
 )
 
+from kp_utils import plot_guess_img
+
 logging.basicConfig()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -351,6 +353,11 @@ def run_one_epoch(
                     print("outputs NOT attend:", outputs[0].shape)
         print("outputs final shape", outputs[0].shape)
         print("labels final shape:", labels[0].shape)
+
+        # save output and label as images (comment this out when done testing)
+        plot_guess_img(outputs[0])
+        plot_guess_img(labels[0])
+
         # Compute loss
         if attend_across_segments:
             loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
