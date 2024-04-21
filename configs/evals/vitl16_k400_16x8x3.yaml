@@ -7,7 +7,7 @@ data:
   dataset_train: /scratch/ki2130/my-jepa/jepa/p_mini_train.csv
   dataset_val: /scratch/ki2130/my-jepa/jepa/p_mini_test.csv
   dataset_type: VideoDataset
-  num_classes: 400
+  num_classes: 165
   frames_per_clip: 16
   num_segments: 8
   num_views_per_segment: 3
