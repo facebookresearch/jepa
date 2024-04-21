@@ -167,6 +167,9 @@ class VideoDataset(torch.utils.data.Dataset):
         # Convert NumPy array to PyTorch tensor
         label_tensor = torch.from_numpy(label_array)
 
+        # Remove the extra dimension using torch.squeeze()
+        labels = labels.squeeze(dim=-1) 
+
         return label_tensor
 
     def __getitem__(self, index):
