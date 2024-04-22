@@ -191,7 +191,7 @@ class VisionTransformer(nn.Module):
 
         if self.norm is not None:
             x = self.norm(x)
-
+        print("shape of encoder output:", x.shape)
         return x
 
     def interpolate_pos_encoding(self, x, pos_embed):
