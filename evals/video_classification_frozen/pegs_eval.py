@@ -289,7 +289,8 @@ def main(args_eval, resume_preempt=False):
             data_loader=val_loader,
             use_bfloat16=use_bfloat16)
 
-        logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
+        logger.info('[%5d] train: %.3f test: %.3f' % (epoch + 1, train_acc, val_acc))
+        # logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
         if rank == 0:
             csv_logger.log(epoch + 1, train_acc, val_acc)
         save_checkpoint(epoch + 1)
@@ -364,7 +365,7 @@ def run_one_epoch(
             loss = 0 
             for i in range(len(labels)):
                 loss+=criterion(outputs[0][i,:], labels[i])
-            # consider averaging
+            loss = loss/len(labels)
             # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
         else:
             loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
