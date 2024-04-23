@@ -52,7 +52,7 @@ from evals.video_classification_frozen.utils import (
     FrameAggregation
 )
 
-from evals.kp_utils import plot_guess_img
+from evals.video_classification_frozen.kp_utils import plot_guess_img
 
 logging.basicConfig()
 logger = logging.getLogger()
