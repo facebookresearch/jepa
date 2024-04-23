@@ -356,12 +356,16 @@ def run_one_epoch(
         print("labels[0] final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
-        #plot_guess_img(outputs[0], output_filename = 'outputs.png')
-        plot_guess_img(labels[0], output_filename = 'labels.png')
+        plot_guess_img(outputs[0][0,:,:], output_filename = 'outputs-0.png')
+        plot_guess_img(labels[0], output_filename = 'labels-0.png')
 
         # Compute loss
         if attend_across_segments:
-            loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
+            loss = 0 
+            for i in range(len(labels)):
+                loss+=criterion(outputs[0][i,:,:], labels[i])
+            # consider averaging
+            # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
         else:
             loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
         with torch.no_grad():
