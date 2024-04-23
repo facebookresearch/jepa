@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from PIL import Image
 
-def plot_guess_img(input_tensor, reference_img='evals.video_classification_frozen.reference_with_border.png', output_filename='guess.png', scale=150):
+def plot_guess_img(input_tensor, reference_img='video_classification_frozen.reference_with_border.png', output_filename='guess.png', scale=150):
     assert input_tensor.numel() == 165, "input tensor must have exactly 165 entries"
     background = Image.open(reference_img)
 
