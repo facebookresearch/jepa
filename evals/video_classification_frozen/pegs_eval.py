@@ -380,7 +380,7 @@ def run_one_epoch(
             # Initialize variables for correct predictions
             correct_count = 0
             # Iterate over each row (i) in outputs[0]
-            for i in range(outputs[0].size(0)):
+            for i in range(len(labels)):
                 # Get the ith row of outputs[0] and compute the maximum index
                 row_outputs = outputs[0][i, :]
                 max_index = torch.argmax(row_outputs)
