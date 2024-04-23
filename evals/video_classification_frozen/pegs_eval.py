@@ -355,7 +355,7 @@ def run_one_epoch(
         print("labels final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
-        plot_guess_img(outputs[0], output_filename = 'outputs.png')
+        #plot_guess_img(outputs[0], output_filename = 'outputs.png')
         plot_guess_img(labels[0], output_filename = 'labels.png')
 
         # Compute loss
