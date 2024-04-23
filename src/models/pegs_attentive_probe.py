@@ -13,14 +13,16 @@ class PegAttentiveClassifier(nn.Module):
     """ Attentive Classifier """
     def __init__(
         self,
-        embed_dim=768,
+        embed_dim=768, #note that the embed dim gets set from the encoder parameters (vit)
         num_classes=165
     ):
         super().__init__()
-        self.linear = nn.Linear(embed_dim, num_classes, bias=False)
+        self.linear = nn.Linear(12544*embed_dim, num_classes, bias=False)
 
     def forward(self, x):
         print("input to classifier x shape:", x.shape)
-        x = self.linear(x)
+        flattened_x = x.flatten(1,-1)
+        print("flattened x:", flattened_x.shape)
+        x = self.linear(flattened_x)
         return x
 
