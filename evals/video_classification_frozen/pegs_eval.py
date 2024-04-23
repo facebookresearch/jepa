@@ -351,8 +351,13 @@ def run_one_epoch(
                 else:
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
                     print("outputs NOT attend:", outputs[0].shape)
-        print("outputs final shape", outputs[0].shape)
-        print("labels final shape:", labels[0].shape)
+        print("outputs type", type(outputs))
+        try:
+            print("outputs shape", outputs.shape)
+        except:
+            print("outputs has no shape") 
+        print("outputs[0] final shape", outputs[0].shape)
+        print("labels[0] final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
         #plot_guess_img(outputs[0], output_filename = 'outputs.png')
