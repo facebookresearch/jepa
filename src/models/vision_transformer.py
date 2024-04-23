@@ -173,7 +173,7 @@ class VisionTransformer(nn.Module):
         if pos_embed is not None:
             x += pos_embed
         B, N, D = x.shape
-
+        print("pos_embed x shape:", x.shape)
         # Mask away unwanted tokens (if masks provided)
         if masks is not None:
             x = apply_masks(x, masks)
