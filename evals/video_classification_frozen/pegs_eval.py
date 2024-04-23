@@ -351,11 +351,7 @@ def run_one_epoch(
                 else:
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
                     print("outputs NOT attend:", outputs[0].shape)
-        print("outputs type", type(outputs))
-        try:
-            print("outputs shape", outputs.shape)
-        except:
-            print("outputs has no shape") 
+        print("outputs is:", outputs)
         print("outputs[0] final shape", outputs[0].shape)
         print("labels[0] final shape:", labels[0].shape)
 
