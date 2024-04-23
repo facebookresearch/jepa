@@ -370,12 +370,15 @@ def run_one_epoch(
             loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
         with torch.no_grad():
             if attend_across_segments:
-                outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
+                loss = 0 
+                for i in range(len(labels)):
+                    loss+=criterion(outputs[0][i,:], labels[i])
+                # outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
             else:
                 outputs = sum([sum([F.softmax(ost, dim=1) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
-            top1_acc = 100. * outputs.max(dim=1).indices.eq(labels).sum() / batch_size
-            top1_acc = float(AllReduce.apply(top1_acc))
-            top1_meter.update(top1_acc)
+            # top1_acc = 100. * outputs.max(dim=1).indices.eq(labels).sum() / batch_size
+            # top1_acc = float(AllReduce.apply(top1_acc))
+            # top1_meter.update(top1_acc)
 
         if training:
             if use_bfloat16:
@@ -390,12 +393,14 @@ def run_one_epoch(
                 optimizer.step()
             optimizer.zero_grad()
 
-        if itr % 20 == 0:
-            logger.info('[%5d] %.3f%% (loss: %.3f) [mem: %.2e]'
-                        % (itr, top1_meter.avg, loss,
-                           torch.cuda.max_memory_allocated() / 1024.**2))
+        # if itr % 20 == 0:
+        #     logger.info('[%5d] %.3f%% (loss: %.3f) [mem: %.2e]'
+        #                 % (itr, top1_meter.avg, loss,
+        #                    torch.cuda.max_memory_allocated() / 1024.**2))
 
-    return top1_meter.avg
+    # return top1_meter.avg
+    # kat
+    return loss
 
 
 def load_checkpoint(
