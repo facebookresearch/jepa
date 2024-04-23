@@ -170,6 +170,9 @@ class VideoDataset(torch.utils.data.Dataset):
         # Remove the extra dimension using torch.squeeze()
         label_tensor = label_tensor.squeeze(dim=-1) 
 
+        # Convert type
+        label_tensor = label_tensor.to(dtype=torch.float32)
+
         return label_tensor
 
     def __getitem__(self, index):
