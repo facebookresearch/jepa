@@ -20,11 +20,12 @@ class PegAttentiveClassifier(nn.Module):
         self.linear = nn.Linear(12544*embed_dim, num_classes, bias=False)
 
     def forward(self, x):
+        print("input to classifier shape:", x.shape)
         x = torch.sum(x, dim=1)
+        print("summed x:", x.shape)
         x = self.linear(x)
         return x
         
-        # print("input to classifier x shape:", x.shape)
         # flattened_x = x.flatten(1,-1)
         # print("flattened x:", flattened_x.shape)
         # x = self.linear(flattened_x)
