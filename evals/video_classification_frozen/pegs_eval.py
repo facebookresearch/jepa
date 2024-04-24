@@ -337,7 +337,7 @@ def run_one_epoch(
             # Forward and prediction
             with torch.no_grad():
                 outputs = encoder(clips, clip_indices)
-                print("outputs with encoder applied to clips and clips indices shape:", outputs[0].shape)
+                # print("outputs with encoder applied to clips and clips indices shape:", outputs[0].shape)
                 if not training:
                     if attend_across_segments:
                         outputs = [classifier(o) for o in outputs]
@@ -348,13 +348,13 @@ def run_one_epoch(
             if training:
                 if attend_across_segments:
                     outputs = [classifier(o) for o in outputs]
-                    print("outputs attend:", outputs[0].shape)
+                    # print("outputs attend:", outputs[0].shape)
                 else:
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
-                    print("outputs NOT attend:", outputs[0].shape)
+                    # print("outputs NOT attend:", outputs[0].shape)
         # print("outputs is:", outputs)
-        print("outputs[0] final shape", outputs[0].shape)
-        print("labels[0] final shape:", labels[0].shape)
+        # print("outputs[0] final shape", outputs[0].shape)
+        # print("labels[0] final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
         plot_guess_img(outputs[0][0,:], output_filename = 'outputs-0.png')
