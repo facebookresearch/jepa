@@ -91,7 +91,7 @@ def launch_evals_with_parsed_args(
         slurm_max_num_timeout=20)
     executor.update_parameters(
         slurm_partition=partition,
-        slurm_mem='55G',
+        slurm_mem='128G',
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
