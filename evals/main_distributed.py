@@ -96,7 +96,7 @@ def launch_evals_with_parsed_args(
         nodes=nodes,
         tasks_per_node=tasks_per_node,
         cpus_per_task=8,
-        gpus_per_node=tasks_per_node,
+        gpus_per_node=2,
 	slurm_mail_type='ALL',
 	slurm_mail_user='ki2130@nyu.edu',
 	slurm_job_name='child-video-jepa2')
