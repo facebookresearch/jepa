@@ -35,7 +35,7 @@ class MaskCollator(object):
                 num_frames=num_frames,
                 spatial_patch_size=patch_size,
                 temporal_patch_size=tubelet_size,
-                ratio=m.get('ratio'),
+                ratio=m.get("ratio"),
             )
             self.mask_generators.append(mask_generator)
 
@@ -69,21 +69,24 @@ class _MaskGenerator(object):
     ):
         super(_MaskGenerator, self).__init__()
         if not isinstance(crop_size, tuple):
-            crop_size = (crop_size, ) * 2
+            crop_size = (crop_size,) * 2
         self.crop_size = crop_size
-        self.height, self.width = crop_size[0] // spatial_patch_size, crop_size[1] // spatial_patch_size
+        self.height, self.width = (
+            crop_size[0] // spatial_patch_size,
+            crop_size[1] // spatial_patch_size,
+        )
         self.duration = num_frames // temporal_patch_size
 
         self.spatial_patch_size = spatial_patch_size
         self.temporal_patch_size = temporal_patch_size
-        self.num_patches_spatial = self.height*self.width
+        self.num_patches_spatial = self.height * self.width
 
         self.ratio = ratio
 
-        self.num_keep_spatial = int(self.num_patches_spatial*(1.-self.ratio))
+        self.num_keep_spatial = int(self.num_patches_spatial * (1.0 - self.ratio))
         self.num_keep = self.num_keep_spatial * self.duration
 
-        self._itr_counter = Value('i', -1)  # collator is shared across worker processes
+        self._itr_counter = Value("i", -1)  # collator is shared across worker processes
 
     def step(self):
         i = self._itr_counter
@@ -94,10 +97,12 @@ class _MaskGenerator(object):
 
     def __call__(self, batch_size):
         def sample_mask():
-            mask = np.hstack([
-                np.zeros(self.num_patches_spatial - self.num_keep_spatial),
-                np.ones(self.num_keep_spatial),
-            ])
+            mask = np.hstack(
+                [
+                    np.zeros(self.num_patches_spatial - self.num_keep_spatial),
+                    np.ones(self.num_keep_spatial),
+                ]
+            )
             np.random.shuffle(mask)
             mask = torch.tensor(np.tile(mask, (self.duration, 1)))
             mask = mask.flatten()

@@ -21,7 +21,7 @@ class ImageFolder(torchvision.datasets.ImageFolder):
     def __init__(
         self,
         root,
-        image_folder='imagenet_full_size/061417/',
+        image_folder="imagenet_full_size/061417/",
         transform=None,
         train=True,
     ):
@@ -32,11 +32,11 @@ class ImageFolder(torchvision.datasets.ImageFolder):
         :param train: whether to load train data (or validation)
         """
 
-        suffix = 'train/' if train else 'val/'
+        suffix = "train/" if train else "val/"
         data_path = os.path.join(root, image_folder, suffix)
-        logger.info(f'data-path {data_path}')
+        logger.info(f"data-path {data_path}")
         super(ImageFolder, self).__init__(root=data_path, transform=transform)
-        logger.info('Initialized ImageFolder')
+        logger.info("Initialized ImageFolder")
 
 
 def make_imagedataset(
@@ -53,18 +53,15 @@ def make_imagedataset(
     copy_data=False,
     drop_last=True,
     persistent_workers=False,
-    subset_file=None
+    subset_file=None,
 ):
     dataset = ImageFolder(
-        root=root_path,
-        image_folder=image_folder,
-        transform=transform,
-        train=training)
-    logger.info('ImageFolder dataset created')
+        root=root_path, image_folder=image_folder, transform=transform, train=training
+    )
+    logger.info("ImageFolder dataset created")
     dist_sampler = torch.utils.data.distributed.DistributedSampler(
-        dataset=dataset,
-        num_replicas=world_size,
-        rank=rank)
+        dataset=dataset, num_replicas=world_size, rank=rank
+    )
     data_loader = torch.utils.data.DataLoader(
         dataset,
         collate_fn=collator,
@@ -73,7 +70,8 @@ def make_imagedataset(
         drop_last=drop_last,
         pin_memory=pin_mem,
         num_workers=num_workers,
-        persistent_workers=persistent_workers)
-    logger.info('ImageFolder unsupervised data loader created')
+        persistent_workers=persistent_workers,
+    )
+    logger.info("ImageFolder unsupervised data loader created")
 
     return dataset, data_loader, dist_sampler

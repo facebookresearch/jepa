@@ -12,10 +12,10 @@ import torch
 
 
 def gpu_timer(closure, log_timings=True):
-    """ Helper to time gpu-time to execute closure() """
+    """Helper to time gpu-time to execute closure()"""
     log_timings = log_timings and torch.cuda.is_available()
 
-    elapsed_time = -1.
+    elapsed_time = -1.0
     if log_timings:
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -36,8 +36,13 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_logger(name=None, force=False):
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                        format=LOG_FORMAT, datefmt=DATE_FORMAT, force=force)
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format=LOG_FORMAT,
+        datefmt=DATE_FORMAT,
+        force=force,
+    )
     return logging.getLogger(name=name)
 
 
@@ -47,18 +52,18 @@ class CSVLogger(object):
         self.fname = fname
         self.types = []
         # -- print headers
-        with open(self.fname, '+a') as f:
+        with open(self.fname, "+a") as f:
             for i, v in enumerate(argv, 1):
                 self.types.append(v[0])
                 if i < len(argv):
-                    print(v[1], end=',', file=f)
+                    print(v[1], end=",", file=f)
                 else:
-                    print(v[1], end='\n', file=f)
+                    print(v[1], end="\n", file=f)
 
     def log(self, *argv):
-        with open(self.fname, '+a') as f:
+        with open(self.fname, "+a") as f:
             for i, tv in enumerate(zip(self.types, argv), 1):
-                end = ',' if i < len(argv) else '\n'
+                end = "," if i < len(argv) else "\n"
                 print(tv[0] % tv[1], end=end, file=f)
 
 
@@ -71,8 +76,8 @@ class AverageMeter(object):
     def reset(self):
         self.val = 0
         self.avg = 0
-        self.max = float('-inf')
-        self.min = float('inf')
+        self.max = float("-inf")
+        self.min = float("inf")
         self.sum = 0
         self.count = 0
 
@@ -93,26 +98,26 @@ def grad_logger(named_params):
     stats.first_layer = None
     stats.last_layer = None
     for n, p in named_params:
-        if (p.grad is not None) and not (n.endswith('.bias') or len(p.shape) == 1):
+        if (p.grad is not None) and not (n.endswith(".bias") or len(p.shape) == 1):
             grad_norm = float(torch.norm(p.grad.data))
             stats.update(grad_norm)
-            if 'qkv' in n:
+            if "qkv" in n:
                 stats.last_layer = grad_norm
                 if stats.first_layer is None:
                     stats.first_layer = grad_norm
     if stats.first_layer is None or stats.last_layer is None:
-        stats.first_layer = stats.last_layer = 0.
+        stats.first_layer = stats.last_layer = 0.0
     return stats
 
 
 def adamw_logger(optimizer):
-    """ logging magnitude of first and second momentum buffers in adamw """
+    """logging magnitude of first and second momentum buffers in adamw"""
     # TODO: assert that optimizer is instance of torch.optim.AdamW
-    state = optimizer.state_dict().get('state')
+    state = optimizer.state_dict().get("state")
     exp_avg_stats = AverageMeter()
     exp_avg_sq_stats = AverageMeter()
     for key in state:
         s = state.get(key)
-        exp_avg_stats.update(float(s.get('exp_avg').abs().mean()))
-        exp_avg_sq_stats.update(float(s.get('exp_avg_sq').abs().mean()))
-    return {'exp_avg': exp_avg_stats, 'exp_avg_sq': exp_avg_sq_stats}
+        exp_avg_stats.update(float(s.get("exp_avg").abs().mean()))
+        exp_avg_sq_stats.update(float(s.get("exp_avg_sq").abs().mean()))
+    return {"exp_avg": exp_avg_stats, "exp_avg_sq": exp_avg_sq_stats}

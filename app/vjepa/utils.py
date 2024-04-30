@@ -16,9 +16,7 @@ import torch
 import src.models.vision_transformer as video_vit
 import src.models.predictor as vit_pred
 from src.models.utils.multimask import MultiMaskWrapper, PredictorMultiMaskWrapper
-from src.utils.schedulers import (
-    WarmupCosineSchedule,
-    CosineWDSchedule)
+from src.utils.schedulers import WarmupCosineSchedule, CosineWDSchedule
 from src.utils.tensors import trunc_normal_
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -34,43 +32,43 @@ def load_checkpoint(
     scaler,
 ):
     try:
-        checkpoint = torch.load(r_path, map_location=torch.device('cpu'))
+        checkpoint = torch.load(r_path, map_location=torch.device("cpu"))
     except Exception as e:
-        logger.info(f'Encountered exception when loading checkpoint {e}')
+        logger.info(f"Encountered exception when loading checkpoint {e}")
 
     epoch = 0
     try:
-        epoch = checkpoint['epoch']
+        epoch = checkpoint["epoch"]
 
         # -- loading encoder
-        pretrained_dict = checkpoint['encoder']
+        pretrained_dict = checkpoint["encoder"]
         msg = encoder.load_state_dict(pretrained_dict)
-        logger.info(f'loaded pretrained encoder from epoch {epoch} with msg: {msg}')
+        logger.info(f"loaded pretrained encoder from epoch {epoch} with msg: {msg}")
 
         # -- loading predictor
-        pretrained_dict = checkpoint['predictor']
+        pretrained_dict = checkpoint["predictor"]
         msg = predictor.load_state_dict(pretrained_dict)
-        logger.info(f'loaded pretrained predictor from epoch {epoch} with msg: {msg}')
+        logger.info(f"loaded pretrained predictor from epoch {epoch} with msg: {msg}")
 
         # -- loading target_encoder
         if target_encoder is not None:
             print(list(checkpoint.keys()))
-            pretrained_dict = checkpoint['target_encoder']
+            pretrained_dict = checkpoint["target_encoder"]
             msg = target_encoder.load_state_dict(pretrained_dict)
             logger.info(
-                f'loaded pretrained target encoder from epoch {epoch} with msg: {msg}'
+                f"loaded pretrained target encoder from epoch {epoch} with msg: {msg}"
             )
 
         # -- loading optimizer
-        opt.load_state_dict(checkpoint['opt'])
+        opt.load_state_dict(checkpoint["opt"])
         if scaler is not None:
-            scaler.load_state_dict(checkpoint['scaler'])
-        logger.info(f'loaded optimizers from epoch {epoch}')
-        logger.info(f'read-path: {r_path}')
+            scaler.load_state_dict(checkpoint["scaler"])
+        logger.info(f"loaded optimizers from epoch {epoch}")
+        logger.info(f"read-path: {r_path}")
         del checkpoint
 
     except Exception as e:
-        logger.info(f'Encountered exception when loading checkpoint {e}')
+        logger.info(f"Encountered exception when loading checkpoint {e}")
         epoch = 0
 
     return (
@@ -88,7 +86,7 @@ def init_video_model(
     patch_size=16,
     num_frames=16,
     tubelet_size=2,
-    model_name='vit_base',
+    model_name="vit_base",
     crop_size=224,
     pred_depth=6,
     pred_embed_dim=384,
@@ -107,7 +105,7 @@ def init_video_model(
         use_sdpa=use_sdpa,
     )
     encoder = MultiMaskWrapper(encoder)
-    predictor = vit_pred.__dict__['vit_predictor'](
+    predictor = vit_pred.__dict__["vit_predictor"](
         img_size=crop_size,
         use_mask_tokens=use_mask_tokens,
         patch_size=patch_size,
@@ -147,8 +145,8 @@ def init_video_model(
     def count_parameters(model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    logger.info(f'Encoder number of parameters: {count_parameters(encoder)}')
-    logger.info(f'Predictor number of parameters: {count_parameters(predictor)}')
+    logger.info(f"Encoder number of parameters: {count_parameters(encoder)}")
+    logger.info(f"Predictor number of parameters: {count_parameters(predictor)}")
 
     return encoder, predictor
 
@@ -172,25 +170,40 @@ def init_opt(
 ):
     param_groups = [
         {
-            'params': (p for n, p in encoder.named_parameters()
-                       if ('bias' not in n) and (len(p.shape) != 1))
-        }, {
-            'params': (p for n, p in predictor.named_parameters()
-                       if ('bias' not in n) and (len(p.shape) != 1))
-        }, {
-            'params': (p for n, p in encoder.named_parameters()
-                       if ('bias' in n) or (len(p.shape) == 1)),
-            'WD_exclude': zero_init_bias_wd,
-            'weight_decay': 0,
-        }, {
-            'params': (p for n, p in predictor.named_parameters()
-                       if ('bias' in n) or (len(p.shape) == 1)),
-            'WD_exclude': zero_init_bias_wd,
-            'weight_decay': 0,
+            "params": (
+                p
+                for n, p in encoder.named_parameters()
+                if ("bias" not in n) and (len(p.shape) != 1)
+            )
+        },
+        {
+            "params": (
+                p
+                for n, p in predictor.named_parameters()
+                if ("bias" not in n) and (len(p.shape) != 1)
+            )
+        },
+        {
+            "params": (
+                p
+                for n, p in encoder.named_parameters()
+                if ("bias" in n) or (len(p.shape) == 1)
+            ),
+            "WD_exclude": zero_init_bias_wd,
+            "weight_decay": 0,
+        },
+        {
+            "params": (
+                p
+                for n, p in predictor.named_parameters()
+                if ("bias" in n) or (len(p.shape) == 1)
+            ),
+            "WD_exclude": zero_init_bias_wd,
+            "weight_decay": 0,
         },
     ]
 
-    logger.info('Using AdamW')
+    logger.info("Using AdamW")
     optimizer = torch.optim.AdamW(param_groups, betas=betas, eps=eps)
     scheduler = WarmupCosineSchedule(
         optimizer,

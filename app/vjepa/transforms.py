@@ -14,14 +14,13 @@ from src.datasets.utils.video.randerase import RandomErasing
 
 def make_transforms(
     random_horizontal_flip=True,
-    random_resize_aspect_ratio=(3/4, 4/3),
+    random_resize_aspect_ratio=(3 / 4, 4 / 3),
     random_resize_scale=(0.3, 1.0),
     reprob=0.0,
     auto_augment=False,
     motion_shift=False,
     crop_size=224,
-    normalize=((0.485, 0.456, 0.406),
-               (0.229, 0.224, 0.225))
+    normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ):
 
     _frames_augmentation = VideoTransform(
@@ -42,14 +41,13 @@ class VideoTransform(object):
     def __init__(
         self,
         random_horizontal_flip=True,
-        random_resize_aspect_ratio=(3/4, 4/3),
+        random_resize_aspect_ratio=(3 / 4, 4 / 3),
         random_resize_scale=(0.3, 1.0),
         reprob=0.0,
         auto_augment=False,
         motion_shift=False,
         crop_size=224,
-        normalize=((0.485, 0.456, 0.406),
-                   (0.229, 0.224, 0.225))
+        normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ):
 
         self.random_horizontal_flip = random_horizontal_flip
@@ -62,25 +60,28 @@ class VideoTransform(object):
         self.std = torch.tensor(normalize[1], dtype=torch.float32)
         if not self.auto_augment:
             # Without auto-augment, PIL and tensor conversions simply scale uint8 space by 255.
-            self.mean *= 255.
-            self.std *= 255.
+            self.mean *= 255.0
+            self.std *= 255.0
 
         self.autoaug_transform = video_transforms.create_random_augment(
             input_size=(crop_size, crop_size),
-            auto_augment='rand-m7-n4-mstd0.5-inc1',
-            interpolation='bicubic',
+            auto_augment="rand-m7-n4-mstd0.5-inc1",
+            interpolation="bicubic",
         )
 
-        self.spatial_transform = video_transforms.random_resized_crop_with_shift \
-            if motion_shift else video_transforms.random_resized_crop
+        self.spatial_transform = (
+            video_transforms.random_resized_crop_with_shift
+            if motion_shift
+            else video_transforms.random_resized_crop
+        )
 
         self.reprob = reprob
         self.erase_transform = RandomErasing(
             reprob,
-            mode='pixel',
+            mode="pixel",
             max_count=1,
             num_splits=1,
-            device='cpu',
+            device="cpu",
         )
 
     def __call__(self, buffer):
