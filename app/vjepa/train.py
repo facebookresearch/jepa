@@ -376,6 +376,8 @@ def main(args, resume_preempt=False):
         gpu_time_meter = AverageMeter()
         wall_time_meter = AverageMeter()
 
+        ### Air test
+        print(ipe)
         for itr in range(ipe):
             itr_start_time = time.time()
 

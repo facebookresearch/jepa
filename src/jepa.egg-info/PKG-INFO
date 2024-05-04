@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: jepa
+Version: 0.0.1
+Summary: JEPA research code.
+Requires-Python: >=3.9
+License-File: LICENSE
+Requires-Dist: torch>=2
+Requires-Dist: torchvision
+Requires-Dist: pyyaml
+Requires-Dist: numpy
+Requires-Dist: opencv-python
+Requires-Dist: submitit
+Requires-Dist: braceexpand
+Requires-Dist: webdataset
+Requires-Dist: timm
+Requires-Dist: decord
+Requires-Dist: pandas
+Requires-Dist: einops
+Requires-Dist: beartype
