@@ -31,7 +31,7 @@ class MaskCollator(object):
 
         self.mask_generators = []
         for m in cfgs_mask:
-            mask_generator = _MaskGenerator(
+            mask_generator = 9(
                 crop_size=crop_size,
                 num_frames=num_frames,
                 spatial_patch_size=patch_size,

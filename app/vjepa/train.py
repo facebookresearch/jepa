@@ -222,6 +222,7 @@ def main(args, resume_preempt=False):
     target_encoder = copy.deepcopy(encoder)
 
     # -- make data transforms
+    # using first one
     if mask_type == 'multiblock3d':
         logger.info('Initializing basic multi-block mask')
         mask_collator = MB3DMaskCollator(
