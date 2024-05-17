@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -14,6 +14,7 @@ import yaml
 import torch
 
 import src.models.vision_transformer as video_vit
+from src.models.action_encoders import ActionEncoderContinuous, ActionEncoderDiscrete
 import src.models.predictor as vit_pred
 from src.models.utils.multimask import MultiMaskWrapper, PredictorMultiMaskWrapper
 from src.utils.schedulers import WarmupCosineSchedule, CosineWDSchedule
@@ -95,6 +96,10 @@ def init_video_model(
     num_mask_tokens=2,
     zero_init_mask_tokens=True,
     use_sdpa=False,
+    action_type: str = "disc",  # "cont",
+    num_actions=19,
+    embed_dim=32,
+    hidden_dim=32,
 ):
     encoder = video_vit.__dict__[model_name](
         img_size=crop_size,
@@ -105,6 +110,7 @@ def init_video_model(
         use_sdpa=use_sdpa,
     )
     encoder = MultiMaskWrapper(encoder)
+
     predictor = vit_pred.__dict__["vit_predictor"](
         img_size=crop_size,
         use_mask_tokens=use_mask_tokens,
@@ -121,6 +127,13 @@ def init_video_model(
         use_sdpa=use_sdpa,
     )
     predictor = PredictorMultiMaskWrapper(predictor)
+
+    if action_type == "disc":
+        action_encoder = ActionEncoderDiscrete(
+            num_actions=num_actions, embed_dim=embed_dim, hidden_dim=hidden_dim
+        )
+    # else:
+    #     action_encoder = ActionEncoderContinuous(input_dim=)
 
     def init_weights(m):
         if isinstance(m, torch.nn.Linear):
@@ -148,7 +161,7 @@ def init_video_model(
     logger.info(f"Encoder number of parameters: {count_parameters(encoder)}")
     logger.info(f"Predictor number of parameters: {count_parameters(predictor)}")
 
-    return encoder, predictor
+    return encoder, predictor, action_encoder
 
 
 def init_opt(

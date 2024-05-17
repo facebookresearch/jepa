@@ -2,7 +2,7 @@ app: vjepa
 nodes: 30
 tasks_per_node: 8
 data:
-  dataset_type: VideoDataset
+  dataset_type: egovehicle_imagedataset
   datasets:
     - /home/ncdev/Documents/darwin/data/raw/v-jepa-pretrain.csv
     # - /your_path_to_ssv2_csv_file_index.csv

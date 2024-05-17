@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -93,5 +93,19 @@ def init_data(
             drop_last=drop_last,
             log_dir=log_dir,
         )
+    elif data.lower() == "egovehicle_imagedataset":
+        from src.datasets.image_dataset import make_egovehicle_imagedataset
 
+        dataset, data_loader, dist_sampler = make_egovehicle_imagedataset(
+            data_paths=root_path,
+            batch_size=batch_size,
+            transform=transform,
+            shared_transform=shared_transform,
+            rank=rank,
+            world_size=world_size,
+            collator=collator,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            pin_mem=pin_mem,
+        )
     return (data_loader, dist_sampler)

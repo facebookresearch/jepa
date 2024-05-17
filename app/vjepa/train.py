@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -6,6 +6,7 @@
 #
 
 import os
+import csv
 
 # -- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
 try:
@@ -40,6 +41,12 @@ from src.utils.logging import (
     AverageMeter,
 )
 from src.utils.tensors import repeat_interleave_batch
+from src.models.utils.combine_encodings import (
+    combine_encodings_concat,
+    combine_encodings_add,
+    AttentionFusion,
+)
+
 
 from app.vjepa.utils import (
     load_checkpoint,
@@ -64,7 +71,32 @@ torch.backends.cudnn.benchmark = True
 logger = get_logger(__name__)
 
 
+def generate_csv_file(data_dir, csv_filename="v-jepa-pretrain.csv"):
+    csv_filepath = os.path.join(data_dir, csv_filename)
+    logger.info(f"Generating CSV file: {csv_filepath}")
+
+    valid_folders = []
+    for folder_name in os.listdir(data_dir):
+        folder_path = os.path.join(data_dir, folder_name)
+        action_filepath = os.path.join(folder_path, "action_data.csv")
+        if os.path.isdir(folder_path) and os.path.isfile(action_filepath):
+            valid_folders.append(folder_path)
+        else:
+            logger.warning(
+                f"Skipping folder '{folder_name}' due to missing or invalid action_data.csv"
+            )
+
+    with open(csv_filepath, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile, delimiter=" ")
+        for folder_path in valid_folders:
+            writer.writerow([folder_path, 0])  # Write folder path and dummy label (0)
+
+    logger.info(f"CSV file generation complete. Found {len(valid_folders)} valid folders.")
+
+
 def main(args, resume_preempt=False):
+    # First let's go over the folders and generate the 
+    
     # ----------------------------------------------------------------------- #
     #  PASSED IN PARAMS FROM CONFIG FILE
     # ----------------------------------------------------------------------- #
@@ -103,7 +135,7 @@ def main(args, resume_preempt=False):
 
     # -- DATA
     cfgs_data = args.get("data")
-    dataset_type = cfgs_data.get("dataset_type", "videodataset")
+    dataset_type = cfgs_data.get("dataset_type", "egovehicle_imagedataset")
     mask_type = cfgs_data.get("mask_type", "multiblock3d")
     dataset_paths = cfgs_data.get("datasets", [])
     datasets_weights = cfgs_data.get("datasets_weights", None)
@@ -162,6 +194,12 @@ def main(args, resume_preempt=False):
     # ----------------------------------------------------------------------- #
     # ----------------------------------------------------------------------- #
 
+    # Generate CSV file (only if not already exists)
+    csv_filename = "v-jepa-pretrain.csv"
+    # if not os.path.exists(os.path.join(dataset_paths[0], csv_filename)):
+    generate_csv_file(dataset_paths[0]) 
+
+
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = True
@@ -207,7 +245,7 @@ def main(args, resume_preempt=False):
     )
 
     # -- init model
-    encoder, predictor = init_video_model(
+    encoder, predictor, action_encoder = init_video_model(
         uniform_power=uniform_power,
         use_mask_tokens=use_mask_tokens,
         num_mask_tokens=len(cfgs_mask),
@@ -413,6 +451,11 @@ def main(args, resume_preempt=False):
                     [u.to(device, non_blocking=True) for u in udata[0]], dim=0
                 )
 
+                # Load action data
+                actions = torch.cat(
+                    [a.to(device, non_blocking=True) for a in actions], dim=0
+                )
+
                 # Put each mask-enc/mask-pred pair on the GPU and reuse the
                 # same mask pair for each clip
                 _masks_enc, _masks_pred = [], []
@@ -424,9 +467,9 @@ def main(args, resume_preempt=False):
                     _masks_enc.append(_me)
                     _masks_pred.append(_mp)
 
-                return (clips, _masks_enc, _masks_pred)
+                return (clips, _masks_enc, _masks_pred, actions)
 
-            clips, masks_enc, masks_pred = load_clips()
+            clips, masks_enc, masks_pred, actions = load_clips()
 
             for _i, m in enumerate(mask_meters):
                 m.update(masks_enc[_i][0].size(-1))
@@ -447,24 +490,43 @@ def main(args, resume_preempt=False):
                             h, (h.size(-1),)
                         )  # normalize over feature-dim  [B, N, D]
                         # -- create targets (masked regions of h)
-                        h = apply_masks(h, masks_pred, concat=False)
-                        return h
+                        # h = apply_masks(h, masks_pred, concat=False)
+                        # -- create targets (next frames of h)
+                        h_next = h[
+                            :, 1:, :
+                        ]  # Assuming frames are ordered chronologically. These are ground truth next frames
+                        return h_next
 
-                def forward_context(c, h):
+                def forward_context(c, h, a):
                     """
                     Returns list of tensors of shape [B, N, D], one for each
                     mask-pred.
                     """
                     z = encoder(c, masks_enc)
-                    z = predictor(z, h, masks_enc, masks_pred)
+
+                    # Encode the action representations
+                    z_a = action_encoder(a)
+
+                    # Combine the encoded actions with the encoded video clips
+                    z_combined = combine_encodings_concat(z, z_a)
+
+                    z = predictor(z_combined, h, masks_enc, masks_pred)
                     return z
 
-                def loss_fn(z, h):
+                # def loss_fn(z, h):
+                #     loss = 0.0
+                #     # Compute loss and accumulate for each mask-enc/mask-pred pair
+                #     for zi, hi in zip(z, h):
+                #         loss += torch.mean(torch.abs(zi - hi) ** loss_exp) / loss_exp
+                #     # loss /= len(masks_pred)
+                #     return loss
+
+                def loss_fn(z_next, h_next):
                     loss = 0.0
-                    # Compute loss and accumulate for each mask-enc/mask-pred pair
-                    for zi, hi in zip(z, h):
+                    # Compute loss between predicted next frames and ground truth next frames
+                    for zi, hi in zip(z_next, h_next):
                         loss += torch.mean(torch.abs(zi - hi) ** loss_exp) / loss_exp
-                    loss /= len(masks_pred)
+                    loss /= len(h_next)
                     return loss
 
                 def reg_fn(z):
@@ -475,10 +537,10 @@ def main(args, resume_preempt=False):
                 # Step 1. Forward
                 loss_jepa, loss_reg = 0.0, 0.0
                 with torch.cuda.amp.autocast(dtype=dtype, enabled=mixed_precision):
-                    h = forward_target(clips)
-                    z = forward_context(clips, h)
-                    loss_jepa = loss_fn(z, h)  # jepa prediction loss
-                    pstd_z = reg_fn(z)  # predictor variance across patches
+                    h_next = forward_target(clips)
+                    z_next = forward_context(clips, h_next, actions)
+                    loss_jepa = loss_fn(z_next, h_next)  # jepa prediction loss
+                    pstd_z = reg_fn(z_next)  # predictor variance across patches
                     loss_reg += torch.mean(F.relu(1.0 - pstd_z))
                 loss = loss_jepa + reg_coeff * loss_reg
 

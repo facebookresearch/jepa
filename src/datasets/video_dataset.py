@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -117,6 +117,8 @@ class VideoDataset(torch.utils.data.Dataset):
         self.filter_long_videos = filter_long_videos
         self.duration = duration
 
+        self.frame_sample_rate = None
+
         if VideoReader is None:
             raise ImportError(
                 'Unable to import "decord" which is required to read videos.'
@@ -181,7 +183,27 @@ class VideoDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             buffer = [self.transform(clip) for clip in buffer]
 
-        return buffer, label, clip_indices
+        # Load Action Data
+        action_filepath = os.path.join(os.path.dirname(sample), "action_data.csv")
+        action_df = pd.read_csv(action_filepath)
+        action_labels = self.get_action_labels_for_clip(action_df, clip_indices)
+
+        return buffer, label, clip_indices, action_labels
+
+    def get_action_labels_for_clip(self, action_df, clip_indices):
+        # Convert video frame indices to timestamps in seconds
+        frame_timestamps = clip_indices / self.frame_sample_rate
+
+        # Find the corresponding actions for each frame
+        action_labels = []
+        for timestamp in frame_timestamps:
+            # Find the row with the nearest timestamp (modify this for interpolation if needed)
+            nearest_row = action_df.iloc[
+                (action_df["timestamp"] - timestamp).abs().argmin()
+            ]
+            action_labels.append(nearest_row["action_name"])
+
+        return action_labels
 
     def loadvideo_decord(self, sample):
         """Load video content using Decord"""
@@ -276,6 +298,10 @@ class VideoDataset(torch.utils.data.Dataset):
             all_indices.extend(list(indices))
 
         buffer = vr.get_batch(all_indices).asnumpy()
+
+        # Added the following line to extract the frame rate from video metadata
+        self.frame_sample_rate = vr.get_avg_fps()
+
         return buffer, clip_indices
 
     def __len__(self):
