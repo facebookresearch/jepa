@@ -21,6 +21,7 @@ import copy
 import time
 import numpy as np
 import wandb
+import csv
 
 import torch
 import torch.multiprocessing as mp
@@ -62,6 +63,18 @@ torch.backends.cudnn.benchmark = True
 
 
 logger = get_logger(__name__)
+
+
+import os
+import torch
+import csv
+
+import os
+import torch
+import numpy as np
+import csv
+
+
 
 
 def main(args, resume_preempt=False):
@@ -400,15 +413,45 @@ def main(args, resume_preempt=False):
                 # same mask pair for each clip
                 _masks_enc, _masks_pred = [], []
                 for _me, _mp in zip(masks_enc, masks_pred):
+                    
+                    
                     _me = _me.to(device, non_blocking=True)
                     _mp = _mp.to(device, non_blocking=True)
                     _me = repeat_interleave_batch(_me, batch_size, repeat=num_clips)
                     _mp = repeat_interleave_batch(_mp, batch_size, repeat=num_clips)
+                    
+                    
+                    
                     _masks_enc.append(_me)
                     _masks_pred.append(_mp)
 
                 return (clips, _masks_enc, _masks_pred)
             clips, masks_enc, masks_pred = load_clips()
+            
+            if not os.path.exists('tensors.pth'):
+                #torch.set_printoptions(profile="full")
+                tensors = {
+                    'tensor1': clips,
+                    'tensor2': masks_enc[0],
+                    'tensor3': masks_pred[0]
+                }
+
+                torch.save(tensors, 'tensors.pth')
+                '''with open('OBJECTS.txt', 'w') as file:
+                    
+                    print('clips shape:', clips.shape, 
+                        'masks_enc shape:', len(masks_enc), masks_enc[0].shape, 
+                        'masks_pred shape:', len(masks_pred), masks_pred[0].shape,
+                        file=file
+                    )
+                    for i in range(0, 10):
+                        print('clips shape', clips[i].shape, 'clips:', clips[i], file=file)
+                        print('masks_enc shape', masks_enc[0].shape, 'masks_enc:', masks_enc[0][i], file=file)
+                        print('masks_pred shape', masks_pred[0].shape, 'masks_pred:', masks_pred[0][i], file=file)'''
+
+                    
+                
+            
 
             for _i, m in enumerate(mask_meters):
                 m.update(masks_enc[_i][0].size(-1))
@@ -420,6 +463,7 @@ def main(args, resume_preempt=False):
 
                 def forward_target(c):
                     """
+                    B (batch-size), N (num-patches), D (feature-dim)]
                     Returns list of tensors of shape [B, N, D], one for each
                     mask-pred.
                     """
@@ -432,6 +476,7 @@ def main(args, resume_preempt=False):
 
                 def forward_context(c, h):
                     """
+                    B (batch-size), N (num-patches), D (feature-dim)]
                     Returns list of tensors of shape [B, N, D], one for each
                     mask-pred.
                     """
@@ -454,8 +499,10 @@ def main(args, resume_preempt=False):
                 loss_jepa, loss_reg = 0., 0.
                 with torch.cuda.amp.autocast(dtype=dtype, enabled=mixed_precision):
                     h = forward_target(clips)
+
                     z = forward_context(clips, h)
                     loss_jepa = loss_fn(z, h)  # jepa prediction loss
+                    
                     ### reg_coeff is always 0.0 SO IT IS NOT USED
                     pstd_z = reg_fn(z)  # predictor variance across patches
                     loss_reg += torch.mean(F.relu(1.-pstd_z))

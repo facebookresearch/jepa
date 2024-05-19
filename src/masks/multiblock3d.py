@@ -6,6 +6,7 @@
 #
 
 import math
+import os
 
 from multiprocessing import Value
 
@@ -51,12 +52,14 @@ class MaskCollator(object):
 
     def __call__(self, batch):
 
+
         batch_size = len(batch)
         collated_batch = torch.utils.data.default_collate(batch)
 
         collated_masks_pred, collated_masks_enc = [], []
         for i, mask_generator in enumerate(self.mask_generators):
             masks_enc, masks_pred = mask_generator(batch_size)
+
             collated_masks_enc.append(masks_enc)
             collated_masks_pred.append(masks_pred)
 
