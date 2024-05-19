@@ -11,6 +11,7 @@ import multiprocessing as mp
 
 import pprint
 import yaml
+import wandb
 
 from app.scaffold import main as app_main
 from src.utils.distributed import init_distributed
@@ -51,6 +52,17 @@ def process_main(rank, fname, world_size, devices):
         dump = os.path.join(params['logging']['folder'], 'params-pretrain.yaml')
         with open(dump, 'w') as f:
             yaml.dump(params, f)
+        
+        ### wandb
+        config_dictionary = dict(
+            yaml=params
+        )
+        wandb.init(
+            project="grasp-jepa",
+            config=config_dictionary
+        )
+
+
 
     # Init distributed (access to comm between GPUS on same machine)
     world_size, rank = init_distributed(rank_and_world_size=(rank, world_size))

@@ -11,3 +11,4 @@ decord
 pandas
 einops
 beartype
+wandb

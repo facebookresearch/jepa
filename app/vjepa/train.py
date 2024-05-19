@@ -20,6 +20,7 @@ except Exception:
 import copy
 import time
 import numpy as np
+import wandb
 
 import torch
 import torch.multiprocessing as mp
@@ -455,8 +456,10 @@ def main(args, resume_preempt=False):
                     h = forward_target(clips)
                     z = forward_context(clips, h)
                     loss_jepa = loss_fn(z, h)  # jepa prediction loss
+                    ### reg_coeff is always 0.0 SO IT IS NOT USED
                     pstd_z = reg_fn(z)  # predictor variance across patches
                     loss_reg += torch.mean(F.relu(1.-pstd_z))
+                ### reg_coeff is always 0.0 SO IT JUST loss_jepa
                 loss = loss_jepa + reg_coeff * loss_reg
 
                 # Step 2. Backward & step
@@ -511,6 +514,20 @@ def main(args, resume_preempt=False):
 
             # -- Logging
             def log_stats():
+                
+                if wandb.run is not None:
+                    wandb.log(
+                        {
+                            "loss": loss,
+                            "loss_jepa": loss_jepa,
+                            "loss_reg": loss_reg,
+                            "grad_stats.global_norm": grad_stats.global_norm,
+                            "grad_stats_pred.global_norm": grad_stats_pred.global_norm,
+                            "gpu_etime_ms": gpu_etime_ms,
+                            "iter_elapsed_time_ms": iter_elapsed_time_ms
+                        }
+                    )
+                
                 csv_logger.log(
                     epoch + 1,
                     itr,
@@ -578,6 +595,8 @@ def main(args, resume_preempt=False):
 
         # -- Save Checkpoint
         logger.info('avg. loss %.3f' % loss_meter.avg)
+        if wandb.run is not None:
+            wandb.log({"avg_loss": loss_meter.avg})
         # -- Save Last
         if epoch % checkpoint_freq == 0 or epoch == (num_epochs - 1):
             save_checkpoint(epoch + 1, latest_path)

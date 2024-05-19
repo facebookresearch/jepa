@@ -1,2 +1,5 @@
 .*.swp
 *.pyc
+*.webm
+wandb/*
+logs_n_checkpoints/*

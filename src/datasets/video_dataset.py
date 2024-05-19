@@ -188,7 +188,7 @@ class VideoDataset(torch.utils.data.Dataset):
 
         fname = sample
         if not os.path.exists(fname):
-            warnings.warn(f'video path not found {fname=}')
+            # warnings.warn(f'video path not found {fname=}')
             return [], None
 
         _fsize = os.path.getsize(fname)
