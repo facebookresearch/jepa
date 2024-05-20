@@ -17,7 +17,7 @@ from src.utils.distributed import init_distributed
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--fname", type=str, help="name of config file to load", default="configs.yaml"
+    "--fname", type=str, help="name of config file to load", default="configs/pretrain/vith16_384.yaml"
 )
 parser.add_argument(
     "--devices",
