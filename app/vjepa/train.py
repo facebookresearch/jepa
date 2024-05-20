@@ -431,9 +431,7 @@ def main(args, resume_preempt=False):
             if not os.path.exists('tensors.pth'):
                 #torch.set_printoptions(profile="full")
                 tensors = {
-                    'tensor1': clips,
-                    'tensor2': masks_enc,
-                    'tensor3': masks_pred
+                    'tensor1': clips
                 }
 
                 torch.save(tensors, 'tensors.pth')
@@ -500,7 +498,7 @@ def main(args, resume_preempt=False):
                 with torch.cuda.amp.autocast(dtype=dtype, enabled=mixed_precision):
                     h = forward_target(clips)
                     z = forward_context(clips, h)
-                    print('z:', z.shape, 'h:', h.shape)
+                    print('z:', len(z), z[0].shape, 'h:', len(h), h[0].shape)
                     loss_jepa = loss_fn(z, h)  # jepa prediction loss
                     
                     ### reg_coeff is always 0.0 SO IT IS NOT USED

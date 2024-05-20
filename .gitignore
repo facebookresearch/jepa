@@ -3,3 +3,6 @@
 *.webm
 wandb/*
 logs_n_checkpoints/*
+tensors.pth
+20bn*
+.DS_Store*

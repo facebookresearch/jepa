@@ -180,7 +180,8 @@ class _MaskGenerator(object):
             while empty_context:
 
                 mask_e = torch.ones((self.duration, self.height, self.width), dtype=torch.int32)
-                current_masks = []  # List to store masks for current iteration
+                
+                current_masks = []
 
                 for _ in range(self.npred):
                     mask_block = self._sample_block_mask(p_size)
@@ -201,6 +202,7 @@ class _MaskGenerator(object):
                     collated_masks_pred.append(mask_p)
                     collated_masks_enc.append(mask_e)
 
+        # not used
         if self.max_keep is not None:
             min_keep_enc = min(min_keep_enc, self.max_keep)
 
