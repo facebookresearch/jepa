@@ -151,7 +151,7 @@ class _MaskGenerator(object):
         # (X=self.max_context_frames)
         if self.max_context_duration < self.duration:
             mask[self.max_context_duration:, :, :] = 0
-
+        
         # --
         return mask
 
@@ -180,8 +180,15 @@ class _MaskGenerator(object):
             while empty_context:
 
                 mask_e = torch.ones((self.duration, self.height, self.width), dtype=torch.int32)
+                current_masks = []  # List to store masks for current iteration
+
                 for _ in range(self.npred):
-                    mask_e *= self._sample_block_mask(p_size)
+                    mask_block = self._sample_block_mask(p_size)
+                    current_masks.append(mask_block)
+                    mask_e *= mask_block
+                
+                if not os.path.exists('masks.pt'):
+                    torch.save(current_masks, 'masks.pt')
                 mask_e = mask_e.flatten()
 
                 mask_p = torch.argwhere(mask_e == 0).squeeze()
