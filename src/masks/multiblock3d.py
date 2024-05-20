@@ -173,7 +173,7 @@ class _MaskGenerator(object):
         )
 
         collated_masks_pred, collated_masks_enc = [], []
-        min_keep_enc = min_keep_pred = self.duration * self.height * self.width
+        min_keep_enc = min_keep_pred = self.duration * self.height * self.width # 1568 = 8 (as 16 frames / 2 tubelet_size) * 14p * 14p
         for _ in range(batch_size):
 
             empty_context = True
@@ -191,6 +191,7 @@ class _MaskGenerator(object):
                 if not os.path.exists('masks_sdf.pt'):
                     torch.save(current_masks, 'masks_sdf.pt')
                 mask_e = mask_e.flatten()
+                print('mask_e shape', mask_e.shape)
 
                 mask_p = torch.argwhere(mask_e == 0).squeeze()
                 mask_e = torch.nonzero(mask_e).squeeze()
@@ -206,6 +207,7 @@ class _MaskGenerator(object):
         if self.max_keep is not None:
             min_keep_enc = min(min_keep_enc, self.max_keep)
 
+        # seems like not really needed, but just in case they are cutting by 1568
         collated_masks_pred = [cm[:min_keep_pred] for cm in collated_masks_pred]
         collated_masks_pred = torch.utils.data.default_collate(collated_masks_pred)
         # --
