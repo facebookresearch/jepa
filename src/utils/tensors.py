@@ -14,6 +14,17 @@ from logging import getLogger
 logger = getLogger()
 
 
+def to_batch(images):
+    """Converts a list of images into a batched tensor.
+
+    Args:
+        images (list): A list of image tensors, each of shape [C, H, W].
+
+    Returns:
+        torch.Tensor: A batched tensor of shape [B, C, H, W], where B is the batch size.
+    """
+    return torch.stack(images, dim=0)
+
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
     # Cut & paste from PyTorch official master until it's in a few official releases - RW
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf

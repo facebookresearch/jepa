@@ -11,8 +11,12 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
+                "PYTHONPATH": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [                            // Pass arguments here
+                "--fname", "configs/pretrain/vith16_384.yaml"
+            ],
         }
     ]
 }

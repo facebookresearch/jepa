@@ -90,37 +90,37 @@ from PIL import Image
 class ImageDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        data_paths,  # List of directories containing timestamped image folders
+        csv_file_path,  # List of directories containing timestamped image folders
         transform=None,
         shared_transform=None,
-    ):
-        self.data_paths = data_paths
+    ):        
         self.transform = transform
         self.shared_transform = shared_transform
 
-        # Load Image Paths and Labels
-        self.samples = []
-        for data_path in self.data_paths:
-            timestamped_folders = [
-                f
-                for f in os.listdir(data_path)
-                if os.path.isdir(os.path.join(data_path, f))
-            ]
-            for folder in timestamped_folders:
-                folder_path = os.path.join(data_path, folder)
-                image_files = sorted(
-                    os.listdir(folder_path)
-                )  # Sort for sequential order
-                self.samples.extend(
-                    [(folder_path, image_file) for image_file in image_files]
-                )  # Store (folder_path, image_filename) tuples
+        # Load Image Paths and Labels from CSV
+        df = pd.read_csv(csv_file_path, header=None, delimiter=" ")
+        self.samples = []  # List to store (image_path, action_label) tuples
 
-        if len(self.samples) == 0:
-            raise RuntimeError(f"Found 0 image files in the data_paths: {data_paths}")
+        for _, row in df.iterrows():
+            folder_path = row[0]
+            action_filepath = os.path.join(folder_path, "action_data.csv")
+            if os.path.exists(action_filepath):
+                try:
+                    action_df = pd.read_csv(action_filepath)
+                except pd.errors.EmptyDataError:
+                    logger.warning(
+                        f"Skipping folder '{folder_path}' due to empty action_data.csv"
+                    )
+                    continue
+                self.samples.extend(list(action_df[["image_path", "maneuver"]].values))  # Store image paths and action labels
+
+        if not self.samples:
+            raise RuntimeError(
+                f"Found 0 image files with corresponding action data in the CSV: {csv_file_path}"
+            )
 
     def __getitem__(self, index):
-        folder_path, image_filename = self.samples[index]
-        image_path = os.path.join(folder_path, image_filename)
+        image_path, action_label = self.samples[index]
 
         # Load Image
         image = Image.open(image_path)
@@ -131,55 +131,7 @@ class ImageDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        # Load Action Data
-        action_filepath = os.path.join(folder_path, "action_data.csv")
-        action_df = pd.read_csv(action_filepath)
-
-        # Extract Timestamp from Image Filename
-        image_timestamp = self.extract_timestamp_from_filename(image_filename)
-        action_label = self.get_action_label_for_timestamp(action_df, image_timestamp)
-
-        return (
-            image,
-            action_label,
-        )  # Return the image and its corresponding action label
-
-    def extract_timestamp_from_filename(self, filename):
-        timestamp_str = os.path.splitext(filename)[0].split("_")[
-            0
-        ]  # Get '20240516_175159'
-        timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
-        return timestamp
-
-    def get_action_labels_for_clip(self, action_df, image_timestamps):
-        action_labels = []
-        for timestamp in image_timestamps:
-            # Find closest action timestamps before and after the image timestamp
-            before_idx = action_df["timestamp"].searchsorted(timestamp) - 1
-            after_idx = before_idx + 1
-
-            # Handle edge cases (first or last image)
-            before_idx = max(0, before_idx)
-            after_idx = min(len(action_df) - 1, after_idx)
-
-            # Get action labels and timestamps
-            action_before = action_df.iloc[before_idx]["action_name"]
-            action_after = action_df.iloc[after_idx]["action_name"]
-            timestamp_before = action_df.iloc[before_idx]["timestamp"]
-            timestamp_after = action_df.iloc[after_idx]["timestamp"]
-
-            # Linear Interpolation (if needed, can be removed for simple nearest neighbor)
-            weight_after = (timestamp - timestamp_before) / (
-                timestamp_after - timestamp_before
-            )
-            if weight_after < 0.5:  # Closer to the previous action
-                action_label = action_before
-            else:  # Closer to the next action
-                action_label = action_after
-
-            action_labels.append(action_label)
-
-        return action_labels
+        return image, action_label  # Return the image and its corresponding action label
 
 
 
@@ -225,7 +177,7 @@ class SequentialImageSampler(Sampler):
 
 
 def make_egovehicle_imagedataset(
-    data_paths,
+    csv_file_path,
     batch_size,
     transform=None,
     shared_transform=None,
@@ -237,7 +189,7 @@ def make_egovehicle_imagedataset(
     pin_mem=True,
 ):
     dataset = ImageDataset(
-        data_paths=data_paths,
+        csv_file_path=csv_file_path,
         transform=transform,
         shared_transform=shared_transform,
     )
