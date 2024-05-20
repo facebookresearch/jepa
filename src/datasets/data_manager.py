@@ -87,5 +87,19 @@ def init_data(
             rank=rank,
             drop_last=drop_last,
             log_dir=log_dir)
+    elif data.lower() == 'sdfdataset':
+        from src.datasets.sdf_dataset import make_sdfdataset
+        dataset, data_loader, dist_sampler = make_sdfdataset(
+            data_paths=root_path,
+            batch_size=batch_size,
+            transform=transform,
+            rank=rank,
+            world_size=world_size,
+            datasets_weights=datasets_weights,
+            collator=collator,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            pin_mem=pin_mem,
+            log_dir=log_dir)
 
     return (data_loader, dist_sampler)

@@ -1,19 +1,15 @@
 app: vjepa
 data:
-  batch_size: 24
-  clip_duration: null
-  crop_size: 224
-  dataset_type: VideoDataset
+  batch_size: 4
+  crop_size: 32
+  dataset_type: SdfDataset
   datasets:
-  - /home/jepa/videos/videos_csv_file_index.csv
-  decode_one_clip: true
-  filter_short_videos: false
+  - /home/jepa/data_sdf/sdf_csv_file_index.csv
   num_clips: 1
-  num_frames: 16
+  num_frames: 32
   num_workers: 12
-  patch_size: 16
+  patch_size: 4
   pin_mem: true
-  sampling_rate: 4
   tubelet_size: 2
 data_aug:
   auto_augment: false
@@ -27,7 +23,7 @@ data_aug:
   reprob: 0.0
 logging:
   folder: /home/jepa/logs_n_checkpoints/
-  write_tag: jepa
+  write_tag: jepa_sdf
 loss:
   loss_exp: 1.0
   reg_coeff: 0.0
@@ -64,6 +60,7 @@ meta:
   seed: 234
   use_sdpa: true
 model:
+  in_chans: 1
   model_name: vit_tiny
   pred_depth: 12
   pred_embed_dim: 192

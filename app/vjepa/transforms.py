@@ -92,7 +92,8 @@ class VideoTransform(object):
             buffer = torch.stack(buffer)  # T C H W
             buffer = buffer.permute(0, 2, 3, 1)  # T H W C
         else:
-            buffer = torch.tensor(buffer, dtype=torch.float32)
+            if type(buffer) != torch.Tensor:
+                buffer = torch.tensor(buffer, dtype=torch.float32)
 
         buffer = buffer.permute(3, 0, 1, 2)  # T H W C -> C T H W
 
@@ -106,7 +107,8 @@ class VideoTransform(object):
         if self.random_horizontal_flip:
             buffer, _ = video_transforms.horizontal_flip(0.5, buffer)
 
-        buffer = _tensor_normalize_inplace(buffer, self.mean, self.std)
+        # commented out for sdf
+        ### buffer = _tensor_normalize_inplace(buffer, self.mean, self.std)
         if self.reprob > 0:
             buffer = buffer.permute(1, 0, 2, 3)
             buffer = self.erase_transform(buffer)

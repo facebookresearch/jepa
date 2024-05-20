@@ -92,6 +92,7 @@ def init_video_model(
     crop_size=224,
     pred_depth=6,
     pred_embed_dim=384,
+    in_chans=3,
     uniform_power=False,
     use_mask_tokens=False,
     num_mask_tokens=2,
@@ -103,6 +104,7 @@ def init_video_model(
         patch_size=patch_size,
         num_frames=num_frames,
         tubelet_size=tubelet_size,
+        in_chans=in_chans,
         uniform_power=uniform_power,
         use_sdpa=use_sdpa,
     )
@@ -116,6 +118,7 @@ def init_video_model(
         embed_dim=encoder.backbone.embed_dim,
         predictor_embed_dim=pred_embed_dim,
         depth=pred_depth,
+        in_chans=in_chans,
         num_heads=encoder.backbone.num_heads,
         uniform_power=uniform_power,
         num_mask_tokens=num_mask_tokens,

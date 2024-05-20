@@ -12,3 +12,5 @@ pandas
 einops
 beartype
 wandb
+open3d
+skicit-image

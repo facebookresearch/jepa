@@ -188,8 +188,8 @@ class _MaskGenerator(object):
                     current_masks.append(mask_block)
                     mask_e *= mask_block
                 
-                if not os.path.exists('masks.pt'):
-                    torch.save(current_masks, 'masks.pt')
+                if not os.path.exists('masks_sdf.pt'):
+                    torch.save(current_masks, 'masks_sdf.pt')
                 mask_e = mask_e.flatten()
 
                 mask_p = torch.argwhere(mask_e == 0).squeeze()

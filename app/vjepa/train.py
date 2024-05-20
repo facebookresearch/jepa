@@ -109,6 +109,7 @@ def main(args, resume_preempt=False):
     cfgs_model = args.get('model')
     model_name = cfgs_model.get('model_name')
     pred_depth = cfgs_model.get('pred_depth')
+    in_chans = cfgs_model.get('in_chans')
     pred_embed_dim = cfgs_model.get('pred_embed_dim')
     uniform_power = cfgs_model.get('uniform_power', True)
     use_mask_tokens = cfgs_model.get('use_mask_tokens', True)
@@ -230,6 +231,7 @@ def main(args, resume_preempt=False):
         model_name=model_name,
         crop_size=crop_size,
         pred_depth=pred_depth,
+        in_chans=in_chans,
         pred_embed_dim=pred_embed_dim,
         use_sdpa=use_sdpa,
     )
@@ -258,7 +260,7 @@ def main(args, resume_preempt=False):
         random_resize_aspect_ratio=ar_range,
         random_resize_scale=rr_scale,
         reprob=reprob,
-        auto_augment=use_aa,
+        auto_augment=use_aa, # not used
         motion_shift=motion_shift,
         crop_size=crop_size)
 
@@ -420,36 +422,18 @@ def main(args, resume_preempt=False):
                     _me = repeat_interleave_batch(_me, batch_size, repeat=num_clips)
                     _mp = repeat_interleave_batch(_mp, batch_size, repeat=num_clips)
                     
-                    
-                    
                     _masks_enc.append(_me)
                     _masks_pred.append(_mp)
 
                 return (clips, _masks_enc, _masks_pred)
             clips, masks_enc, masks_pred = load_clips()
             
-            if not os.path.exists('tensors.pth'):
-                #torch.set_printoptions(profile="full")
-                tensors = {
-                    'tensor1': clips
+            if not os.path.exists('tensors_sdf.pth'):
+                tensors = {'tensor1': clips,
+                           'tensor2': masks_enc,
+                           'tensor3': masks_pred
                 }
-
-                torch.save(tensors, 'tensors.pth')
-                '''with open('OBJECTS.txt', 'w') as file:
-                    
-                    print('clips shape:', clips.shape, 
-                        'masks_enc shape:', len(masks_enc), masks_enc[0].shape, 
-                        'masks_pred shape:', len(masks_pred), masks_pred[0].shape,
-                        file=file
-                    )
-                    for i in range(0, 10):
-                        print('clips shape', clips[i].shape, 'clips:', clips[i], file=file)
-                        print('masks_enc shape', masks_enc[0].shape, 'masks_enc:', masks_enc[0][i], file=file)
-                        print('masks_pred shape', masks_pred[0].shape, 'masks_pred:', masks_pred[0][i], file=file)'''
-
-                    
-                
-            
+                torch.save(tensors, 'tensors_sdf.pth')
 
             for _i, m in enumerate(mask_meters):
                 m.update(masks_enc[_i][0].size(-1))
@@ -498,7 +482,7 @@ def main(args, resume_preempt=False):
                 with torch.cuda.amp.autocast(dtype=dtype, enabled=mixed_precision):
                     h = forward_target(clips)
                     z = forward_context(clips, h)
-                    print('z:', len(z), z[0].shape, 'h:', len(h), h[0].shape)
+                    # print('z:', len(z), z[0].shape, 'h:', len(h), h[0].shape)
                     loss_jepa = loss_fn(z, h)  # jepa prediction loss
                     
                     ### reg_coeff is always 0.0 SO IT IS NOT USED
