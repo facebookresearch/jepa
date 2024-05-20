@@ -402,6 +402,6 @@ If you find this repository useful in your research, please consider giving a st
 @article{bardes2024revisiting,
   title={Revisiting Feature Prediction for Learning Visual Representations from Video},
   author={Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Rabbat, Michael, and LeCun, Yann and Assran, Mahmoud and Ballas, Nicolas},
-  journal={arXiv preprint},
+  journal={arXiv:2404.08471},
   year={2024}
 }
