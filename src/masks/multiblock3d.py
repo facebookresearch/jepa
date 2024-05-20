@@ -191,7 +191,7 @@ class _MaskGenerator(object):
                 if not os.path.exists('masks_sdf.pt'):
                     torch.save(current_masks, 'masks_sdf.pt')
                 mask_e = mask_e.flatten()
-                print('mask_e shape', mask_e.shape)
+                # print('mask_e shape', mask_e.shape)
 
                 mask_p = torch.argwhere(mask_e == 0).squeeze()
                 mask_e = torch.nonzero(mask_e).squeeze()
