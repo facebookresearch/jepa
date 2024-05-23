@@ -94,7 +94,7 @@ def generate_csv_file(data_dir, csv_filename="v-jepa-pretrain.csv"):
     logger.info(f"CSV file generation complete. Found {len(valid_folders)} valid folders.")
 
 
-def main(args, resume_preempt=False):
+def main(args, world_size=1, rank=0, resume_preempt=False):
     # First let's go over the folders and generate the 
     
     # ----------------------------------------------------------------------- #
@@ -192,26 +192,12 @@ def main(args, resume_preempt=False):
     tag = cfgs_logging.get("write_tag")
 
     # ----------------------------------------------------------------------- #
-    # ----------------------------------------------------------------------- #
-
-    # Generate CSV file (only if not already exists)
-    csv_filename = "v-jepa-pretrain.csv"
-    # if not os.path.exists(os.path.join(dataset_paths[0], csv_filename)):
-    generate_csv_file(dataset_paths[0]) 
-
+    # ----------------------------------------------------------------------- #   
 
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.backends.cudnn.benchmark = True
-    try:
-        mp.set_start_method("spawn")
-    except Exception:
-        pass
-
-    # -- init torch distributed backend
-    world_size, rank = init_distributed()
-    logger.info(f"Initialized (rank/world-size) {rank}/{world_size}")
-
+        
     # -- set device
     if not torch.cuda.is_available():
         device = torch.device("cpu")
