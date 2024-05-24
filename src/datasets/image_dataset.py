@@ -53,6 +53,7 @@ def make_imagedataset(
     copy_data=False,
     drop_last=True,
     persistent_workers=False,
+    shuffle=True,
     subset_file=None
 ):
     dataset = ImageFolder(
@@ -64,7 +65,8 @@ def make_imagedataset(
     dist_sampler = torch.utils.data.distributed.DistributedSampler(
         dataset=dataset,
         num_replicas=world_size,
-        rank=rank)
+        rank=rank,
+        shuffle=shuffle)
     data_loader = torch.utils.data.DataLoader(
         dataset,
         collate_fn=collator,

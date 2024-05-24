@@ -63,6 +63,7 @@ def init_data(
             persistent_workers=persistent_workers,
             copy_data=copy_data,
             drop_last=drop_last,
+            shuffle=training,
             subset_file=subset_file)
 
     elif data.lower() == 'videodataset':
@@ -86,6 +87,7 @@ def init_data(
             world_size=world_size,
             rank=rank,
             drop_last=drop_last,
+            shuffle=training,
             log_dir=log_dir)
 
     return (data_loader, dist_sampler)
