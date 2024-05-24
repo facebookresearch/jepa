@@ -358,7 +358,7 @@ The single-machine implementation starts from the [eval/main.py](eval/main.py), 
 For example, to run ImageNet image classification on GPUs "0", "1", and "2" on a local machine using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
 ```bash
 python -m evals.main \
-  --fname configs/eval/vitl16_in1k.yaml \
+  --fname configs/evals/vitl16_in1k.yaml \
   --devices cuda:0 cuda:1 cuda:2
 ```
 
@@ -369,7 +369,7 @@ To launch a distributed evaluation run, the implementation starts from [eval/mai
 For example, to launch a distributed ImageNet image classification experiment using the config [configs/eval/vitl16_in1k.yaml](configs/eval/vitl16_in1k.yaml), type the command:
 ```bash
 python -m evals.main_distributed \
-  --fname configs/eval/vitl16_in1k.yaml \
+  --fname configs/evals/vitl16_in1k.yaml \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
@@ -377,7 +377,7 @@ python -m evals.main_distributed \
 Similarly, to launch a distributed K400 video classification experiment using the config [configs/eval/vitl16_k400.yaml](configs/eval/vitl16_k400.yaml), type the command:
 ```bash
 python -m evals.main_distributed \
-  --fname configs/eval/vitl16_k400.yaml \
+  --fname configs/evals/vitl16_k400.yaml \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
