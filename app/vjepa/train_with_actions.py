@@ -6,7 +6,7 @@
 #
 
 import os
-import csv
+
 
 # -- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
 try:
@@ -21,15 +21,19 @@ except Exception:
 import copy
 import time
 import numpy as np
+import traceback
 
 import torch
 import torch.multiprocessing as mp
 import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel
+from torchvision.transforms import ToPILImage
+
+from einops import rearrange
 
 from src.datasets.data_manager import init_data
-from src.masks.random_tube import MaskCollator as TubeMaskCollator
-from src.masks.multiblock3d import MaskCollator as MB3DMaskCollator
+from src.masks.random_tube import MaskCollatorWithActions as TubeMaskCollatorWithActions
+from src.masks.multiblock3d import MaskCollatorWithActions as MB3DMaskCollator
 from src.masks.utils import apply_masks
 from src.utils.distributed import init_distributed, AllReduce
 from src.utils.logging import (
@@ -53,7 +57,7 @@ from app.vjepa.utils import (
     init_video_model,
     init_opt,
 )
-from app.vjepa.transforms import make_transforms
+from app.vjepa.transforms import make_image_transforms
 
 
 # --
@@ -69,30 +73,6 @@ torch.backends.cudnn.benchmark = True
 
 
 logger = get_logger(__name__)
-
-
-def generate_csv_file(data_dir, csv_filename="v-jepa-pretrain.csv"):
-    csv_filepath = os.path.join(data_dir, csv_filename)
-    logger.info(f"Generating CSV file: {csv_filepath}")
-
-    valid_folders = []
-    for folder_name in os.listdir(data_dir):
-        folder_path = os.path.join(data_dir, folder_name)
-        action_filepath = os.path.join(folder_path, "action_data.csv")
-        if os.path.isdir(folder_path) and os.path.isfile(action_filepath):
-            valid_folders.append(folder_path)
-        else:
-            logger.warning(
-                f"Skipping folder '{folder_name}' due to missing or invalid action_data.csv"
-            )
-
-    with open(csv_filepath, "w", newline="") as csvfile:
-        writer = csv.writer(csvfile, delimiter=" ")
-        for folder_path in valid_folders:
-            writer.writerow([folder_path, 0])  # Write folder path and dummy label (0)
-
-    logger.info(f"CSV file generation complete. Found {len(valid_folders)} valid folders.")
-
 
 def main(args, world_size=1, rank=0, resume_preempt=False):
     # First let's go over the folders and generate the 
@@ -260,20 +240,19 @@ def main(args, world_size=1, rank=0, resume_preempt=False):
         )
     else:
         logger.info("Initializing random tube mask")
-        mask_collator = TubeMaskCollator(
+        mask_collator = TubeMaskCollatorWithActions(
             crop_size=crop_size,
             num_frames=num_frames,
             patch_size=patch_size,
             tubelet_size=tubelet_size,
             cfgs_mask=cfgs_mask,
         )
-    transform = make_transforms(
+    transform = make_image_transforms(
         random_horizontal_flip=True,
         random_resize_aspect_ratio=ar_range,
         random_resize_scale=rr_scale,
         reprob=reprob,
-        auto_augment=use_aa,
-        motion_shift=motion_shift,
+        auto_augment=use_aa,        
         crop_size=crop_size,
     )
 
@@ -377,22 +356,10 @@ def main(args, world_size=1, rank=0, resume_preempt=False):
         try:
             torch.save(save_dict, path)
         except Exception as e:
-            logger.info(f"Encountered exception when saving checkpoint: {e}")
+            logger.info(f"Encountered exception when saving checkpoint: {traceback.format_exc}")
 
     logger.info("Initializing loader...")
-    loader = iter(unsupervised_loader)
-
-    if skip_batches > 0:
-        logger.info(f"Skip {skip_batches} batches")
-        unsupervised_sampler.set_epoch(start_epoch)
-        for itr in range(skip_batches):
-            if itr % 10 == 0:
-                logger.info(f"Skip {itr}/{skip_batches} batches")
-            try:
-                udata = next(loader)
-            except Exception:
-                loader = iter(unsupervised_loader)
-                udata = next(loader)
+    loader = iter(unsupervised_loader)    
 
     # -- TRAINING LOOP
     for epoch in range(start_epoch, num_epochs):
@@ -414,46 +381,50 @@ def main(args, world_size=1, rank=0, resume_preempt=False):
             itr_start_time = time.time()
 
             try:
-                udata, masks_enc, masks_pred = next(loader)
+                collated_images, collated_maneuvers, masks_enc, masks_pred = next(loader)
 
             except StopIteration:
                 logger.info(
                     "Exhausted data loaders before completing all planned iterations. Ending epoch early..."
                 )
                 break  # Exit the current epoch loop if there are no more data points to process
-            # except Exception:
-            #     logger.info('Exhausted data loaders. Refreshing...')
-            #     loader = iter(unsupervised_loader)
-            #     udata, masks_enc, masks_pred = next(loader)
+            
             assert len(masks_enc) == len(
                 masks_pred
             ), "Currently require num encoder masks = num predictor masks"
 
             def load_images_and_actions():
-                # -- images and action labels
-                images = to_batch([i.to(device, non_blocking=True) for i in udata[0]])  # List of images to batched tensor
-                action_labels = udata[1] # Extract actions from the second element
+                try:
+                    images = []
+                    to_pil = ToPILImage()  # Create an instance of ToPILImage
+                    
+                    for i in range(len(collated_images)):
+                        image = collated_images[i]
+                        image = to_pil(image)  # Convert the PyTorch tensor to a PIL Image
+                        image = transform(image)  # Apply the transformation to the PIL image
+                        images.append(image)
 
-                # Convert to numerical format if actions are string labels
-                unique_actions = sorted(set(action_labels))
-                action_to_idx = {action: idx for idx, action in enumerate(unique_actions)}
-                action_labels = torch.tensor([action_to_idx[a] for a in action_labels]).to(device)
+                    # Stack the transformed images into a single batched tensor
+                    images = torch.stack(images, dim=0).to(device, non_blocking=True)
 
-                # -- Encode actions
-                encoded_actions = action_encoder(action_labels)  # Encode the actions
+                    # -- Encode actions
+                    encoded_actions = action_encoder(collated_maneuvers)
 
-                # ... (load masks as before, but adapt for images)
-                _masks_enc, _masks_pred = [], []
-                for _me, _mp in zip(masks_enc, masks_pred):
-                    _me = _me.to(device, non_blocking=True)
-                    _mp = _mp.to(device, non_blocking=True)
-                    _masks_enc.append(_me)  
-                    _masks_pred.append(_mp)
+                    # ... (load masks as before)
+                    _masks_enc, _masks_pred = [], []
+                    for _me, _mp in zip(masks_enc, masks_pred):
+                        _me = _me.to(device, non_blocking=True)
+                        _mp = _mp.to(device, non_blocking=True)
+                        _masks_enc.append(_me)
+                        _masks_pred.append(_mp)
 
-                return (images, _masks_enc, _masks_pred, encoded_actions)  # Return encoded actions
+                    return images, encoded_actions, _masks_enc, _masks_pred
+                except Exception as e:
+                    logger.error(f"Error in load_images_and_actions: {str(e)}")
+                    raise e
 
             
-            images, masks_enc, masks_pred, encoded_actions = load_images_and_actions()
+            images, encoded_actions, masks_enc, masks_pred = load_images_and_actions()
 
             for _i, m in enumerate(mask_meters):
                 m.update(masks_enc[_i][0].size(-1))
@@ -486,7 +457,7 @@ def main(args, world_size=1, rank=0, resume_preempt=False):
 
                 def forward_context(images, encoded_actions, h):
                     """
-                    Encodes context images with the encoder, combines with encoded actions, 
+                    Encodes context images with the encoder, combines with encoded actions,
                     and predicts masked regions using the predictor.
 
                     Args:
@@ -494,20 +465,23 @@ def main(args, world_size=1, rank=0, resume_preempt=False):
                             of image sequences.
                         encoded_actions (torch.Tensor): A tensor of shape [B, T, A] representing encoded actions,
                             where A is the action embedding dimension.
-                        h (torch.Tensor): The hidden state from the target encoder (optional, might not be used in your case).
+                        h (torch.Tensor): The hidden state from the target encoder. (Ground truth)
 
                     Returns:
                         torch.Tensor: A list of tensors representing the predicted values for the masked regions.
                     """
+                    try:
+                        image_embeddings = encoder(images, masks_enc)
 
-                    image_embeddings = encoder(images, masks_enc) 
-                    
-                    # Combine image and action embeddings
-                    combined_embeddings = combine_encodings_concat(image_embeddings, encoded_actions)
-                    
-                    # Predict masked regions
-                    predictions = predictor(combined_embeddings, h, masks_enc, masks_pred)
-                    return predictions
+                        # Combine image and action embeddings
+                        combined_embeddings = combine_encodings_concat(image_embeddings, encoded_actions)
+
+                        # Predict masked regions
+                        predictions = predictor(combined_embeddings, h, masks_enc, masks_pred)
+                        return predictions
+                    except Exception as e:
+                        logger.error(f"Error in forward_context: {str(e)}")
+                        raise e
 
 
                 def loss_fn(z_next, h_next):

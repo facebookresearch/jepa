@@ -19,6 +19,7 @@ except Exception:
 
 import logging
 import pprint
+import traceback
 
 import numpy as np
 
@@ -417,7 +418,7 @@ def load_checkpoint(device, r_path, classifier, opt, scaler):
         del checkpoint
 
     except Exception as e:
-        logger.info(f"Encountered exception when loading checkpoint {e}")
+        logger.info(f"Encountered exception when loading checkpoint {traceback.format_exc}")
         epoch = 0
 
     return classifier, opt, scaler, epoch

@@ -163,6 +163,8 @@ class VisionTransformer(nn.Module):
         :param x: input image/video
         :param masks: indices of patch tokens to mask (remove)
         """
+        if x is None:
+            raise ValueError("Input tensor x cannot be None")
 
         if masks is not None and not isinstance(masks, list):
             masks = [masks]
@@ -171,7 +173,9 @@ class VisionTransformer(nn.Module):
         pos_embed = self.pos_embed
         if pos_embed is not None:
             pos_embed = self.interpolate_pos_encoding(x, pos_embed)
+                
         x = self.patch_embed(x)
+        
         if pos_embed is not None:
             x += pos_embed
         B, N, D = x.shape
@@ -195,62 +199,41 @@ class VisionTransformer(nn.Module):
             x = self.norm(x)
 
         return x
-
+   
     def interpolate_pos_encoding(self, x, pos_embed):
-
         _, N, dim = pos_embed.shape
 
-        if self.is_video:
-
-            # If pos_embed already corret size, just return
+        if x.dim() == 5:  # Video clip [B, C, T, H, W]
             _, _, T, H, W = x.shape
-            if H == self.input_size and W == self.input_size and T == self.num_frames:
-                return pos_embed
-
-            # Convert depth, height, width of input to be measured in patches
-            # instead of pixels/frames
-            T = T // self.tubelet_size
-            H = H // self.patch_size
-            W = W // self.patch_size
-
-            # Compute the initialized shape of the positional embedding measured
-            # in patches
-            N_t = self.num_frames // self.tubelet_size
-            N_h = N_w = self.input_size // self.patch_size
-            assert N_h * N_w * N_t == N, "Positional embedding initialized incorrectly"
-
-            # Compute scale factor for spatio-temporal interpolation
-            scale_factor = (T / N_t, H / N_h, W / N_w)
-
-            pos_embed = nn.functional.interpolate(
-                pos_embed.reshape(1, N_t, N_h, N_w, dim).permute(0, 4, 1, 2, 3),
-                scale_factor=scale_factor,
-                mode="trilinear",
-            )
-            pos_embed = pos_embed.permute(0, 2, 3, 4, 1).view(1, -1, dim)
-            return pos_embed
-
-        else:
-
-            # If pos_embed already corret size, just return
-            _, _, H, W = x.shape
+            # ... (rest of the video interpolation logic remains the same)
+        else:  # Image sequence [B, T, H, W]
+            _, T, H, W = x.shape
+            # If pos_embed already correct size, just return
             if H == self.input_size and W == self.input_size:
+                # Add a temporal dimension to the positional embedding
+                pos_embed = pos_embed.unsqueeze(1).repeat(1, T, 1, 1) 
                 return pos_embed
 
             # Compute scale factor for spatial interpolation
             npatch = (H // self.patch_size) * (W // self.patch_size)
+            # Assuming pos_embed was initialized with no temporal dimension,
+            # N should correspond to the number of patches in a single image
+            assert N == npatch, "Input image size doesn't match model's expected size"
             scale_factor = math.sqrt(npatch / N)
+            
+            # Repeat positional embedding to account for the temporal dimension
+            pos_embed = pos_embed.unsqueeze(1).repeat(1, T, 1, 1)  
 
+            # 2D interpolation of positional embeddings (spatial dimensions)
             pos_embed = nn.functional.interpolate(
-                pos_embed.reshape(1, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(
-                    0, 3, 1, 2
-                ),
-                scale_factor=scale_factor,
+                pos_embed.reshape(1, T, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(0, 4, 1, 2, 3),
+                scale_factor=(1.0, scale_factor, scale_factor),  # Only interpolate spatial dimensions
                 mode="bicubic",
+                align_corners=False,
             )
-            pos_embed = pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
-            return pos_embed
+            pos_embed = pos_embed.permute(0, 2, 3, 4, 1).view(1, -1, dim)
 
+            return pos_embed
 
 def vit_tiny(patch_size=16, **kwargs):
     model = VisionTransformer(

@@ -1,0 +1,88 @@
+app: vjepa
+data:
+  batch_size: 10
+  clip_duration: null
+  crop_size: 384
+  dataset_type: egovehicle_imagedataset
+  datasets:
+  - /home/ncdev/Documents/darwin/data/raw/
+  decode_one_clip: true
+  filter_short_videos: false
+  num_clips: 1
+  num_frames: 16
+  num_workers: 12
+  patch_size: 16
+  pin_mem: true
+  sampling_rate: 4
+  tubelet_size: 2
+data_aug:
+  auto_augment: false
+  motion_shift: false
+  random_resize_aspect_ratio:
+  - 0.75
+  - 1.35
+  random_resize_scale:
+  - 0.3
+  - 1.0
+  reprob: 0.0
+logging:
+  folder: /home/ncdev/Documents/darwin/jepa/logs_and_checkpoints
+  write_tag: jepa
+loss:
+  loss_exp: 1.0
+  reg_coeff: 0.0
+mask:
+- aspect_ratio:
+  - 0.75
+  - 1.5
+  max_keep: null
+  max_temporal_keep: 1.0
+  num_blocks: 8
+  spatial_scale:
+  - 0.15
+  - 0.15
+  temporal_scale:
+  - 1.0
+  - 1.0
+- aspect_ratio:
+  - 0.75
+  - 1.5
+  max_keep: null
+  max_temporal_keep: 1.0
+  num_blocks: 2
+  spatial_scale:
+  - 0.7
+  - 0.7
+  temporal_scale:
+  - 1.0
+  - 1.0
+meta:
+  dtype: bfloat16
+  eval_freq: 100
+  load_checkpoint: false
+  read_checkpoint: null
+  seed: 234
+  use_sdpa: true
+model:
+  model_name: vit_huge
+  pred_depth: 12
+  pred_embed_dim: 384
+  uniform_power: true
+  use_mask_tokens: true
+  zero_init_mask_tokens: true
+nodes: 30
+optimization:
+  clip_grad: 10.0
+  ema:
+  - 0.998
+  - 1.0
+  epochs: 300
+  final_lr: 1.0e-06
+  final_weight_decay: 0.4
+  ipe: 300
+  ipe_scale: 1.25
+  lr: 0.000625
+  start_lr: 0.0002
+  warmup: 40
+  weight_decay: 0.04
+tasks_per_node: 8

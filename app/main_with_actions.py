@@ -12,6 +12,7 @@ import pprint
 import yaml
 import os
 import logging
+import traceback
 
 from app.scaffold import main as app_main
 from src.utils.distributed import init_distributed
@@ -68,7 +69,7 @@ def main():
     try:
         train(args=params, world_size=world_size, rank=rank)
     except Exception as e:
-        logger.error(f"An error occurred during training: {e}")
+        logger.error(f"An error occurred during training: {traceback.format_exc}")
         raise e
 
 if __name__ == "__main__":

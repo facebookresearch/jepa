@@ -6,9 +6,11 @@
 #
 
 import os
+import traceback
 
 import torch
 import torch.distributed as dist
+
 
 from logging import getLogger
 
@@ -40,7 +42,7 @@ def init_distributed(port=37123, rank_and_world_size=(None, None)):
         )
     except Exception as e:
         world_size, rank = 1, 0
-        logger.info(f"Rank: {rank}. Distributed training not available {e}")
+        logger.info(f"Rank: {rank}. Distributed training not available {traceback.format_exc}")
 
     return world_size, rank
 

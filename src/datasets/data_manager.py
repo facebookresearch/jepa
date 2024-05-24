@@ -95,17 +95,17 @@ def init_data(
         )
     elif data.lower() == "egovehicle_imagedataset":
         from src.datasets.image_dataset import make_egovehicle_imagedataset
-
-        dataset, data_loader, dist_sampler = make_egovehicle_imagedataset(
-            data_paths=root_path,
+        
+        dataset, data_loader, dist_sampler = make_egovehicle_imagedataset(            
+            data_dir=root_path[0],
             batch_size=batch_size,
             transform=transform,
-            shared_transform=shared_transform,
-            rank=rank,
-            world_size=world_size,
-            collator=collator,
-            drop_last=drop_last,
+            shared_transform=shared_transform,            
+            mask_collator=collator,            
             num_workers=num_workers,
+            world_size=world_size,
+            rank=rank,
             pin_mem=pin_mem,
+            drop_last=drop_last,            
         )
     return (data_loader, dist_sampler)

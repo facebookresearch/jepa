@@ -6,6 +6,9 @@
 #
 
 import os
+import PIL
+from collections import defaultdict
+
 
 from logging import getLogger
 
@@ -88,52 +91,65 @@ from PIL import Image
 
 
 class ImageDataset(torch.utils.data.Dataset):
-    def __init__(
-        self,
-        csv_file_path,  # List of directories containing timestamped image folders
-        transform=None,
-        shared_transform=None,
-    ):        
+    def __init__(self, data_dir, transform=None, shared_transform=None):
+        self.data_dir = data_dir
         self.transform = transform
         self.shared_transform = shared_transform
 
-        # Load Image Paths and Labels from CSV
-        df = pd.read_csv(csv_file_path, header=None, delimiter=" ")
-        self.samples = []  # List to store (image_path, action_label) tuples
+        # Load data from drive folders
+        self.samples = []
+        self.drive_data = {}
 
-        for _, row in df.iterrows():
-            folder_path = row[0]
-            action_filepath = os.path.join(folder_path, "action_data.csv")
-            if os.path.exists(action_filepath):
-                try:
-                    action_df = pd.read_csv(action_filepath)
-                except pd.errors.EmptyDataError:
-                    logger.warning(
-                        f"Skipping folder '{folder_path}' due to empty action_data.csv"
-                    )
+        try:
+            drive_folders = [f for f in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, f))]
+            for drive_folder in drive_folders:
+                drive_path = os.path.join(data_dir, drive_folder)
+                csv_file = os.path.join(drive_path, "drive_data.csv")
+
+                if not os.path.exists(csv_file):
+                    logger.warning(f"Skipping drive folder '{drive_folder}' due to missing drive_data.csv file.")
                     continue
-                self.samples.extend(list(action_df[["image_path", "maneuver"]].values))  # Store image paths and action labels
 
-        if not self.samples:
-            raise RuntimeError(
-                f"Found 0 image files with corresponding action data in the CSV: {csv_file_path}"
-            )
+                try:
+                    drive_df = pd.read_csv(csv_file)
+                    self.drive_data[drive_folder] = drive_df
+                    drive_samples = [(os.path.join(drive_path, row['path_to_image']), row['maneuverID']) for _, row in drive_df.iterrows()]
+                    self.samples.extend(drive_samples)
+                except (pd.errors.EmptyDataError, KeyError) as e:
+                    logger.warning(f"Skipping drive folder '{drive_folder}' due to error: {str(e)}")
 
+            if len(self.samples) == 0:
+                raise RuntimeError(f"No valid drive folders found in the dataset directory: {data_dir}")
+
+        except OSError as e:
+            raise RuntimeError(f"Error accessing dataset directory: {data_dir}. Exception: {str(e)}")
+        
     def __getitem__(self, index):
-        image_path, action_label = self.samples[index]
+        try:
+            image_path, maneuver_id = self.samples[index]
 
-        # Load Image
-        image = Image.open(image_path)
+            # Load image
+            try:
+                image = Image.open(image_path).convert("RGB")  # Convert to RGB here
+            except (IOError, PIL.UnidentifiedImageError) as e:
+                logger.warning(f"Error loading image: {image_path}. Exception: {str(e)}")
+                raise e
 
-        # Apply Transforms
-        if self.shared_transform is not None:
-            image = self.shared_transform(image)
-        if self.transform is not None:
-            image = self.transform(image)
+            # Apply transforms
+            if self.shared_transform is not None:
+                image = self.shared_transform(image)
+            if self.transform is not None:
+                image = self.transform(image)
 
-        return image, action_label  # Return the image and its corresponding action label
+            return image, maneuver_id
 
+        except IndexError as e:
+            raise IndexError(f"Index {index} is out of bounds for the dataset.")
 
+    def __len__(self):
+        if not self.samples:
+            raise RuntimeError("Dataset is empty. No valid samples found.")
+        return len(self.samples)
 
 class SequentialImageSampler(Sampler):
     def __init__(self, image_dataset, num_replicas=None, rank=None):
@@ -175,46 +191,82 @@ class SequentialImageSampler(Sampler):
             num_samples_per_worker += total_samples % self.num_replicas
         return num_samples_per_worker
 
+def collate_fn(batch):
+    images, maneuvers = zip(*batch)
+    
+    # Stack images into a single tensor
+    images = torch.stack(images, dim=0)
+    
+    # Convert maneuvers to a tensor
+    maneuvers = torch.tensor([m for m in maneuvers])
+    
+    return images, maneuvers
 
+class SequentialDriveSampler(Sampler):
+    def __init__(self, image_dataset):
+        self.image_dataset = image_dataset
+        self.drive_indices = self._get_drive_indices()
+
+    def _get_drive_indices(self):
+        drive_indices = defaultdict(list)
+        for idx, (image_path, _) in enumerate(self.image_dataset.samples):
+            drive_folder = os.path.basename(os.path.dirname(image_path))
+            drive_indices[drive_folder].append(idx)
+        return drive_indices
+
+    def __iter__(self):
+        for drive_folder, indices in self.drive_indices.items():
+            yield from indices
+
+    def __len__(self):
+        return len(self.image_dataset)
+    
 def make_egovehicle_imagedataset(
-    csv_file_path,
+    data_dir,
     batch_size,
     transform=None,
     shared_transform=None,
+    mask_collator=None,
+    num_workers=10,
     rank=0,
     world_size=1,
-    collator=None,
-    drop_last=True,
-    num_workers=10,
     pin_mem=True,
+    drop_last=True,
 ):
     dataset = ImageDataset(
-        csv_file_path=csv_file_path,
+        data_dir=data_dir,
         transform=transform,
         shared_transform=shared_transform,
     )
 
     logger.info("ImageDataset created")
 
-    # Ensure that each worker gets a subset of folders while maintaining sequential order
-    sampler = SequentialImageSampler(dataset, num_replicas=world_size, rank=rank)
+    # sampler = SequentialDriveSampler(dataset)
+    dist_sampler = torch.utils.data.distributed.DistributedSampler(
+            dataset, num_replicas=world_size, rank=rank, shuffle=True
+        )
     
-    # Wrap the sampler with DistributedSampler for shuffling at the folder level
-    dist_sampler = DistributedSampler(
-        dataset, num_replicas=world_size, rank=rank, shuffle=True
-    )
+    # data_loader = DataLoader(
+    #     dataset,
+    #     batch_size=batch_size,
+    #     sampler=dist_sampler,
+    #     collate_fn=mask_collator,
+    #     num_workers=num_workers,
+    #     pin_memory=pin_mem,
+    #     drop_last=True,
+    # )
 
-    # DataLoader should use both samplers
     data_loader = DataLoader(
         dataset,
-        batch_sampler=dist_sampler, # Using batch_sampler instead of sampler
-        collate_fn=collator,
-        num_workers=num_workers,
-        pin_memory=pin_mem,
+        collate_fn=mask_collator,
+        sampler=dist_sampler,
+        batch_size=batch_size,
         drop_last=drop_last,
+        pin_memory=pin_mem,
+        num_workers=num_workers,
         persistent_workers=num_workers > 0,
     )
 
     logger.info("ImageDataset data loader created")
 
-    return dataset, data_loader, dist_sampler  
+    return dataset, data_loader, dist_sampler

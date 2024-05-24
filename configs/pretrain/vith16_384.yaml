@@ -4,7 +4,7 @@ tasks_per_node: 8
 data:
   dataset_type: egovehicle_imagedataset
   datasets:
-    - /home/ncdev/Documents/darwin/data/raw/v-jepa-pretrain.csv
+    - /home/ncdev/Documents/darwin/data/raw/
     # - /your_path_to_ssv2_csv_file_index.csv
     # - /your_path_to_howto100m_csv_file_index.csv
   decode_one_clip: true

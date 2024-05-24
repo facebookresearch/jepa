@@ -9,6 +9,7 @@ import logging
 import sys
 import warnings
 import yaml
+import traceback
 
 
 import torch
@@ -35,7 +36,7 @@ def load_checkpoint(
     try:
         checkpoint = torch.load(r_path, map_location=torch.device("cpu"))
     except Exception as e:
-        logger.info(f"Encountered exception when loading checkpoint {e}")
+        logger.info(f"Encountered exception when loading checkpoint {traceback.format_exc}")
 
     epoch = 0
     try:
@@ -69,7 +70,7 @@ def load_checkpoint(
         del checkpoint
 
     except Exception as e:
-        logger.info(f"Encountered exception when loading checkpoint {e}")
+        logger.info(f"Encountered exception when loading checkpoint {traceback.format_exc}")
         epoch = 0
 
     return (

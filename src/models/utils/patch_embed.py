@@ -41,15 +41,33 @@ class PatchEmbed3D(nn.Module):
         super().__init__()
         self.patch_size = patch_size
         self.tubelet_size = tubelet_size
-
-        self.proj = nn.Conv3d(
+        self.proj_video = nn.Conv3d(
             in_channels=in_chans,
             out_channels=embed_dim,
             kernel_size=(tubelet_size, patch_size, patch_size),
             stride=(tubelet_size, patch_size, patch_size),
         )
+        self.proj_image = nn.Conv2d(
+            in_channels=in_chans,
+            out_channels=embed_dim,
+            kernel_size=(patch_size, patch_size),
+            stride=(patch_size, patch_size),
+        )
 
     def forward(self, x, **kwargs):
-        B, C, T, H, W = x.shape
-        x = self.proj(x).flatten(2).transpose(1, 2)
+        if x is None:
+            return None
+        
+        if x.ndim == 5:  # Video input
+            B, C, T, H, W = x.shape            
+            x = self.proj_video(x)            
+            x = x.flatten(2).transpose(1, 2)
+        elif x.ndim == 4:  # Image input
+            B, C, H, W = x.shape            
+            x = self.proj_image(x)            
+            x = x.flatten(2).transpose(1, 2)
+            
+        else:
+            raise ValueError(f"Unsupported input shape: {x.shape}")
+        
         return x

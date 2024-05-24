@@ -20,6 +20,7 @@ except Exception:
 import copy
 import time
 import numpy as np
+import traceback
 
 import torch
 import torch.multiprocessing as mp
@@ -343,7 +344,7 @@ def main(args, resume_preempt=False):
         try:
             torch.save(save_dict, path)
         except Exception as e:
-            logger.info(f'Encountered exception when saving checkpoint: {e}')
+            logger.info(f'Encountered exception when saving checkpoint: {traceback.format_exc}')
 
     logger.info('Initializing loader...')
     loader = iter(unsupervised_loader)

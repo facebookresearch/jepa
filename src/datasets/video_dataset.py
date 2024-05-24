@@ -184,7 +184,7 @@ class VideoDataset(torch.utils.data.Dataset):
             buffer = [self.transform(clip) for clip in buffer]
 
         # Load Action Data
-        action_filepath = os.path.join(os.path.dirname(sample), "action_data.csv")
+        action_filepath = os.path.join(os.path.dirname(sample), "drive_data.csv")
         action_df = pd.read_csv(action_filepath)
         action_labels = self.get_action_labels_for_clip(action_df, clip_indices)
 

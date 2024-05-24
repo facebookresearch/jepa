@@ -12,6 +12,41 @@ import src.datasets.utils.video.transforms as video_transforms
 from src.datasets.utils.video.randerase import RandomErasing
 
 
+def make_image_transforms(
+    random_horizontal_flip=True,
+    random_resize_aspect_ratio=(3 / 4, 4 / 3),
+    random_resize_scale=(0.3, 1.0),
+    reprob=0.0,
+    auto_augment=False,
+    crop_size=224,
+    normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+):    
+
+    transform_list = [        
+        transforms.RandomResizedCrop(
+            crop_size,
+            scale=random_resize_scale,
+            ratio=random_resize_aspect_ratio,
+        ),
+    ]
+
+    if random_horizontal_flip:
+        transform_list.append(transforms.RandomHorizontalFlip())
+
+    if auto_augment:
+        transform_list.append(transforms.AutoAugment())
+
+    transform_list.extend([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=normalize[0], std=normalize[1]),
+    ])
+
+    if reprob > 0:
+        transform_list.append(transforms.RandomErasing(p=reprob))
+
+    return transforms.Compose(transform_list)
+
+
 def make_transforms(
     random_horizontal_flip=True,
     random_resize_aspect_ratio=(3 / 4, 4 / 3),
