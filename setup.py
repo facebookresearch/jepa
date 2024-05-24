@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
@@ -8,6 +8,7 @@ import os
 from setuptools import setup
 
 VERSION = "0.0.1"
+
 
 def get_requirements():
     with open("./requirements.txt") as reqsf:

@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -58,21 +58,18 @@ def make_videodataset(
         filter_long_videos=filter_long_videos,
         duration=duration,
         shared_transform=shared_transform,
-        transform=transform)
+        transform=transform,
+    )
 
-    logger.info('VideoDataset dataset created')
+    logger.info("VideoDataset dataset created")
     if datasets_weights is not None:
         dist_sampler = DistributedWeightedSampler(
-            dataset.sample_weights,
-            num_replicas=world_size,
-            rank=rank,
-            shuffle=True)
+            dataset.sample_weights, num_replicas=world_size, rank=rank, shuffle=True
+        )
     else:
         dist_sampler = torch.utils.data.distributed.DistributedSampler(
-            dataset,
-            num_replicas=world_size,
-            rank=rank,
-            shuffle=True)
+            dataset, num_replicas=world_size, rank=rank, shuffle=True
+        )
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
@@ -82,14 +79,15 @@ def make_videodataset(
         drop_last=drop_last,
         pin_memory=pin_mem,
         num_workers=num_workers,
-        persistent_workers=num_workers > 0)
-    logger.info('VideoDataset unsupervised data loader created')
+        persistent_workers=num_workers > 0,
+    )
+    logger.info("VideoDataset unsupervised data loader created")
 
     return dataset, data_loader, dist_sampler
 
 
 class VideoDataset(torch.utils.data.Dataset):
-    """ Video classification dataset. """
+    """Video classification dataset."""
 
     def __init__(
         self,
@@ -119,22 +117,26 @@ class VideoDataset(torch.utils.data.Dataset):
         self.filter_long_videos = filter_long_videos
         self.duration = duration
 
+        self.frame_sample_rate = None
+
         if VideoReader is None:
-            raise ImportError('Unable to import "decord" which is required to read videos.')
+            raise ImportError(
+                'Unable to import "decord" which is required to read videos.'
+            )
 
         # Load video paths and labels
         samples, labels = [], []
         self.num_samples_per_dataset = []
         for data_path in self.data_paths:
 
-            if data_path[-4:] == '.csv':
+            if data_path[-4:] == ".csv":
                 data = pd.read_csv(data_path, header=None, delimiter=" ")
                 samples += list(data.values[:, 0])
                 labels += list(data.values[:, 1])
                 num_samples = len(data)
                 self.num_samples_per_dataset.append(num_samples)
 
-            elif data_path[-4:] == '.npy':
+            elif data_path[-4:] == ".npy":
                 data = np.load(data_path, allow_pickle=True)
                 data = list(map(lambda x: repr(x)[1:-1], data))
                 samples += data
@@ -169,10 +171,10 @@ class VideoDataset(torch.utils.data.Dataset):
         label = self.labels[index]
 
         def split_into_clips(video):
-            """ Split video into a list of clips """
+            """Split video into a list of clips"""
             fpc = self.frames_per_clip
             nc = self.num_clips
-            return [video[i*fpc:(i+1)*fpc] for i in range(nc)]
+            return [video[i * fpc : (i + 1) * fpc] for i in range(nc)]
 
         # Parse video into frames & apply data augmentations
         if self.shared_transform is not None:
@@ -181,22 +183,42 @@ class VideoDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             buffer = [self.transform(clip) for clip in buffer]
 
-        return buffer, label, clip_indices
+        # Load Action Data
+        action_filepath = os.path.join(os.path.dirname(sample), "drive_data.csv")
+        action_df = pd.read_csv(action_filepath)
+        action_labels = self.get_action_labels_for_clip(action_df, clip_indices)
+
+        return buffer, label, clip_indices, action_labels
+
+    def get_action_labels_for_clip(self, action_df, clip_indices):
+        # Convert video frame indices to timestamps in seconds
+        frame_timestamps = clip_indices / self.frame_sample_rate
+
+        # Find the corresponding actions for each frame
+        action_labels = []
+        for timestamp in frame_timestamps:
+            # Find the row with the nearest timestamp (modify this for interpolation if needed)
+            nearest_row = action_df.iloc[
+                (action_df["timestamp"] - timestamp).abs().argmin()
+            ]
+            action_labels.append(nearest_row["action_name"])
+
+        return action_labels
 
     def loadvideo_decord(self, sample):
-        """ Load video content using Decord """
+        """Load video content using Decord"""
 
         fname = sample
         if not os.path.exists(fname):
-            warnings.warn(f'video path not found {fname=}')
+            warnings.warn(f"video path not found {fname=}")
             return [], None
 
         _fsize = os.path.getsize(fname)
         if _fsize < 1 * 1024:  # avoid hanging issue
-            warnings.warn(f'video too short {fname=}')
+            warnings.warn(f"video too short {fname=}")
             return [], None
         if _fsize > self.filter_long_videos:
-            warnings.warn(f'skipping long video of size {_fsize=} (bytes)')
+            warnings.warn(f"skipping long video of size {_fsize=} (bytes)")
             return [], None
 
         try:
@@ -215,7 +237,7 @@ class VideoDataset(torch.utils.data.Dataset):
         clip_len = int(fpc * fstp)
 
         if self.filter_short_videos and len(vr) < clip_len:
-            warnings.warn(f'skipping video of length {len(vr)}')
+            warnings.warn(f"skipping video of length {len(vr)}")
             return [], None
 
         vr.seek(0)  # Go to start of video before sampling frames
@@ -235,7 +257,7 @@ class VideoDataset(torch.utils.data.Dataset):
                     end_indx = np.random.randint(clip_len, partition_len)
                 start_indx = end_indx - clip_len
                 indices = np.linspace(start_indx, end_indx, num=fpc)
-                indices = np.clip(indices, start_indx, end_indx-1).astype(np.int64)
+                indices = np.clip(indices, start_indx, end_indx - 1).astype(np.int64)
                 # --
                 indices = indices + i * partition_len
             else:
@@ -244,8 +266,13 @@ class VideoDataset(torch.utils.data.Dataset):
                 # we reach the desired clip length
                 if not self.allow_clip_overlap:
                     indices = np.linspace(0, partition_len, num=partition_len // fstp)
-                    indices = np.concatenate((indices, np.ones(fpc - partition_len // fstp) * partition_len,))
-                    indices = np.clip(indices, 0, partition_len-1).astype(np.int64)
+                    indices = np.concatenate(
+                        (
+                            indices,
+                            np.ones(fpc - partition_len // fstp) * partition_len,
+                        )
+                    )
+                    indices = np.clip(indices, 0, partition_len - 1).astype(np.int64)
                     # --
                     indices = indices + i * partition_len
 
@@ -254,8 +281,13 @@ class VideoDataset(torch.utils.data.Dataset):
                 else:
                     sample_len = min(clip_len, len(vr)) - 1
                     indices = np.linspace(0, sample_len, num=sample_len // fstp)
-                    indices = np.concatenate((indices, np.ones(fpc - sample_len // fstp) * sample_len,))
-                    indices = np.clip(indices, 0, sample_len-1).astype(np.int64)
+                    indices = np.concatenate(
+                        (
+                            indices,
+                            np.ones(fpc - sample_len // fstp) * sample_len,
+                        )
+                    )
+                    indices = np.clip(indices, 0, sample_len - 1).astype(np.int64)
                     # --
                     clip_step = 0
                     if len(vr) > clip_len:
@@ -266,6 +298,10 @@ class VideoDataset(torch.utils.data.Dataset):
             all_indices.extend(list(indices))
 
         buffer = vr.get_batch(all_indices).asnumpy()
+
+        # Added the following line to extract the frame rate from video metadata
+        self.frame_sample_rate = vr.get_avg_fps()
+
         return buffer, clip_indices
 
     def __len__(self):

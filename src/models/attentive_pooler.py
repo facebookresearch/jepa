@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -10,16 +10,13 @@ import math
 import torch
 import torch.nn as nn
 
-from src.models.utils.modules import (
-    Block,
-    CrossAttention,
-    CrossAttentionBlock
-)
+from src.models.utils.modules import Block, CrossAttention, CrossAttentionBlock
 from src.utils.tensors import trunc_normal_
 
 
 class AttentivePooler(nn.Module):
-    """ Attentive Pooler """
+    """Attentive Pooler"""
+
     def __init__(
         self,
         num_queries=1,
@@ -30,7 +27,7 @@ class AttentivePooler(nn.Module):
         norm_layer=nn.LayerNorm,
         init_std=0.02,
         qkv_bias=True,
-        complete_block=True
+        complete_block=True,
     ):
         super().__init__()
         self.query_tokens = nn.Parameter(torch.zeros(1, num_queries, embed_dim))
@@ -42,24 +39,28 @@ class AttentivePooler(nn.Module):
                 num_heads=num_heads,
                 mlp_ratio=mlp_ratio,
                 qkv_bias=qkv_bias,
-                norm_layer=norm_layer)
+                norm_layer=norm_layer,
+            )
         else:
             self.cross_attention_block = CrossAttention(
-                dim=embed_dim,
-                num_heads=num_heads,
-                qkv_bias=qkv_bias)
+                dim=embed_dim, num_heads=num_heads, qkv_bias=qkv_bias
+            )
 
         self.blocks = None
         if depth > 1:
-            self.blocks = nn.ModuleList([
-                Block(
-                    dim=embed_dim,
-                    num_heads=num_heads,
-                    mlp_ratio=mlp_ratio,
-                    qkv_bias=qkv_bias,
-                    qk_scale=False,
-                    norm_layer=norm_layer)
-                for i in range(depth-1)])
+            self.blocks = nn.ModuleList(
+                [
+                    Block(
+                        dim=embed_dim,
+                        num_heads=num_heads,
+                        mlp_ratio=mlp_ratio,
+                        qkv_bias=qkv_bias,
+                        qk_scale=False,
+                        norm_layer=norm_layer,
+                    )
+                    for i in range(depth - 1)
+                ]
+            )
 
         self.init_std = init_std
         trunc_normal_(self.query_tokens, std=self.init_std)
@@ -103,7 +104,8 @@ class AttentivePooler(nn.Module):
 
 
 class AttentiveClassifier(nn.Module):
-    """ Attentive Classifier """
+    """Attentive Classifier"""
+
     def __init__(
         self,
         embed_dim=768,

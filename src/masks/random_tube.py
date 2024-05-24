@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -35,7 +35,7 @@ class MaskCollator(object):
                 num_frames=num_frames,
                 spatial_patch_size=patch_size,
                 temporal_patch_size=tubelet_size,
-                ratio=m.get('ratio'),
+                ratio=m.get("ratio", 0.9),
             )
             self.mask_generators.append(mask_generator)
 
@@ -56,6 +56,20 @@ class MaskCollator(object):
 
         return collated_batch, collated_masks_enc, collated_masks_pred
 
+class MaskCollatorWithActions(MaskCollator):
+    def __call__(self, batch):
+        images, maneuver_ids = zip(*batch)
+        # collated_images = torch.utils.data.default_collate(images)
+        collated_maneuvers = torch.tensor(maneuver_ids)
+        collated_images = list(images)  # Keep images as a list of PIL images
+
+        collated_masks_pred, collated_masks_enc = [], []
+        for i, mask_generator in enumerate(self.mask_generators):
+            masks_enc, masks_pred = mask_generator(len(collated_images))
+            collated_masks_enc.append(masks_enc)
+            collated_masks_pred.append(masks_pred)
+
+        return collated_images, collated_maneuvers, collated_masks_enc, collated_masks_pred
 
 class _MaskGenerator(object):
 
@@ -69,21 +83,24 @@ class _MaskGenerator(object):
     ):
         super(_MaskGenerator, self).__init__()
         if not isinstance(crop_size, tuple):
-            crop_size = (crop_size, ) * 2
+            crop_size = (crop_size,) * 2
         self.crop_size = crop_size
-        self.height, self.width = crop_size[0] // spatial_patch_size, crop_size[1] // spatial_patch_size
+        self.height, self.width = (
+            crop_size[0] // spatial_patch_size,
+            crop_size[1] // spatial_patch_size,
+        )
         self.duration = num_frames // temporal_patch_size
 
         self.spatial_patch_size = spatial_patch_size
         self.temporal_patch_size = temporal_patch_size
-        self.num_patches_spatial = self.height*self.width
+        self.num_patches_spatial = self.height * self.width        
 
         self.ratio = ratio
 
-        self.num_keep_spatial = int(self.num_patches_spatial*(1.-self.ratio))
+        self.num_keep_spatial = int(self.num_patches_spatial * (1.0 - self.ratio))
         self.num_keep = self.num_keep_spatial * self.duration
 
-        self._itr_counter = Value('i', -1)  # collator is shared across worker processes
+        self._itr_counter = Value("i", -1)  # collator is shared across worker processes
 
     def step(self):
         i = self._itr_counter
@@ -94,10 +111,12 @@ class _MaskGenerator(object):
 
     def __call__(self, batch_size):
         def sample_mask():
-            mask = np.hstack([
-                np.zeros(self.num_patches_spatial - self.num_keep_spatial),
-                np.ones(self.num_keep_spatial),
-            ])
+            mask = np.hstack(
+                [
+                    np.zeros(self.num_patches_spatial - self.num_keep_spatial),
+                    np.ones(self.num_keep_spatial),
+                ]
+            )
             np.random.shuffle(mask)
             mask = torch.tensor(np.tile(mask, (self.duration, 1)))
             mask = mask.flatten()

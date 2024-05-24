@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -12,15 +12,13 @@ class PatchEmbed(nn.Module):
     """
     Image to Patch Embedding
     """
-    def __init__(
-        self,
-        patch_size=16,
-        in_chans=3,
-        embed_dim=768
-    ):
+
+    def __init__(self, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
         self.patch_size = patch_size
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
+        self.proj = nn.Conv2d(
+            in_chans, embed_dim, kernel_size=patch_size, stride=patch_size
+        )
 
     def forward(self, x):
         B, C, H, W = x.shape
@@ -43,15 +41,33 @@ class PatchEmbed3D(nn.Module):
         super().__init__()
         self.patch_size = patch_size
         self.tubelet_size = tubelet_size
-
-        self.proj = nn.Conv3d(
+        self.proj_video = nn.Conv3d(
             in_channels=in_chans,
             out_channels=embed_dim,
             kernel_size=(tubelet_size, patch_size, patch_size),
             stride=(tubelet_size, patch_size, patch_size),
         )
+        self.proj_image = nn.Conv2d(
+            in_channels=in_chans,
+            out_channels=embed_dim,
+            kernel_size=(patch_size, patch_size),
+            stride=(patch_size, patch_size),
+        )
 
     def forward(self, x, **kwargs):
-        B, C, T, H, W = x.shape
-        x = self.proj(x).flatten(2).transpose(1, 2)
+        if x is None:
+            return None
+        
+        if x.ndim == 5:  # Video input
+            B, C, T, H, W = x.shape            
+            x = self.proj_video(x)            
+            x = x.flatten(2).transpose(1, 2)
+        elif x.ndim == 4:  # Image input
+            B, C, H, W = x.shape            
+            x = self.proj_image(x)            
+            x = x.flatten(2).transpose(1, 2)
+            
+        else:
+            raise ValueError(f"Unsupported input shape: {x.shape}")
+        
         return x

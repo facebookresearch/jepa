@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -56,11 +56,12 @@ class ResourceMonitoringThread(threading.Thread):
         if stats_callback_fn is None:
             # Default callback
             def stats_callback_fn(resource_sample: ResourceStatsSample):
-                print(
-                    f"PID {self.p.pid} Stats: {resource_sample.resource_stats}")
+                print(f"PID {self.p.pid} Stats: {resource_sample.resource_stats}")
+
         elif not callable(stats_callback_fn):
-            raise ValueError("Callback needs to be callable, got {}".format(
-                type(stats_callback_fn)))
+            raise ValueError(
+                "Callback needs to be callable, got {}".format(type(stats_callback_fn))
+            )
         self.stats_callback_fn = stats_callback_fn
 
     def stop(self) -> None:
@@ -121,8 +122,7 @@ class ResourceMonitoringThread(threading.Thread):
                     if min_x == max_x:
                         cpu_affinity_compressed.append("{}".format(min_x))
                     else:
-                        cpu_affinity_compressed.append(
-                            "{}-{}".format(min_x, max_x))
+                        cpu_affinity_compressed.append("{}-{}".format(min_x, max_x))
                     min_x = x
                     max_x = x
                 last_x = x
@@ -131,8 +131,7 @@ class ResourceMonitoringThread(threading.Thread):
                 if min_x == max_x:
                     cpu_affinity_compressed.append("{}".format(min_x))
                 else:
-                    cpu_affinity_compressed.append(
-                        "{}-{}".format(min_x, max_x))
+                    cpu_affinity_compressed.append("{}-{}".format(min_x, max_x))
 
             # Concat
             cpu_affinity_compressed = ",".join(cpu_affinity_compressed)
@@ -167,6 +166,7 @@ class ResourceMonitoringThread(threading.Thread):
 if __name__ == "__main__":
     import multiprocessing
     import time
+
     pid = multiprocessing.current_process().pid
     monitor_thread = ResourceMonitoringThread(pid, 1)
     monitor_thread.start()

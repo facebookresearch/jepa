@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -36,12 +36,12 @@ class MaskCollator(object):
                 num_frames=num_frames,
                 spatial_patch_size=patch_size,
                 temporal_patch_size=tubelet_size,
-                spatial_pred_mask_scale=m.get('spatial_scale'),
-                temporal_pred_mask_scale=m.get('temporal_scale'),
-                aspect_ratio=m.get('aspect_ratio'),
-                npred=m.get('num_blocks'),
-                max_context_frames_ratio=m.get('max_temporal_keep', 1.0),
-                max_keep=m.get('max_keep', None),
+                spatial_pred_mask_scale=m.get("spatial_scale"),
+                temporal_pred_mask_scale=m.get("temporal_scale"),
+                aspect_ratio=m.get("aspect_ratio"),
+                npred=m.get("num_blocks"),
+                max_context_frames_ratio=m.get("max_temporal_keep", 1.0),
+                max_keep=m.get("max_keep", None),
             )
             self.mask_generators.append(mask_generator)
 
@@ -62,7 +62,21 @@ class MaskCollator(object):
 
         return collated_batch, collated_masks_enc, collated_masks_pred
 
+class MaskCollatorWithActions(MaskCollator):
+    def __call__(self, batch):
+        images, maneuver_ids = zip(*batch)
+        # collated_images = torch.utils.data.default_collate(images)
+        collated_maneuvers = torch.tensor(maneuver_ids)
+        collated_images = list(images)  # Keep images as a list of PIL images        
 
+        collated_masks_pred, collated_masks_enc = [], []
+        for i, mask_generator in enumerate(self.mask_generators):
+            masks_enc, masks_pred = mask_generator(len(collated_images))
+            collated_masks_enc.append(masks_enc)
+            collated_masks_pred.append(masks_pred)
+
+        return collated_images, collated_maneuvers, collated_masks_enc, collated_masks_pred
+    
 class _MaskGenerator(object):
 
     def __init__(
@@ -80,9 +94,12 @@ class _MaskGenerator(object):
     ):
         super(_MaskGenerator, self).__init__()
         if not isinstance(crop_size, tuple):
-            crop_size = (crop_size, ) * 2
+            crop_size = (crop_size,) * 2
         self.crop_size = crop_size
-        self.height, self.width = crop_size[0] // spatial_patch_size, crop_size[1] // spatial_patch_size
+        self.height, self.width = (
+            crop_size[0] // spatial_patch_size,
+            crop_size[1] // spatial_patch_size,
+        )
         self.duration = num_frames // temporal_patch_size
 
         self.spatial_patch_size = spatial_patch_size
@@ -92,9 +109,11 @@ class _MaskGenerator(object):
         self.spatial_pred_mask_scale = spatial_pred_mask_scale
         self.temporal_pred_mask_scale = temporal_pred_mask_scale
         self.npred = npred
-        self.max_context_duration = max(1, int(self.duration * max_context_frames_ratio))  # maximum number of time-steps (frames) spanned by context mask
+        self.max_context_duration = max(
+            1, int(self.duration * max_context_frames_ratio)
+        )  # maximum number of time-steps (frames) spanned by context mask
         self.max_keep = max_keep  # maximum number of patches to keep in context
-        self._itr_counter = Value('i', -1)  # collator is shared across worker processes
+        self._itr_counter = Value("i", -1)  # collator is shared across worker processes
 
     def step(self):
         i = self._itr_counter
@@ -104,11 +123,7 @@ class _MaskGenerator(object):
         return v
 
     def _sample_block_size(
-        self,
-        generator,
-        temporal_scale,
-        spatial_scale,
-        aspect_ratio_scale
+        self, generator, temporal_scale, spatial_scale, aspect_ratio_scale
     ):
         # -- Sample temporal block mask scale
         _rand = torch.rand(1, generator=generator).item()
@@ -142,12 +157,12 @@ class _MaskGenerator(object):
         start = torch.randint(0, self.duration - t + 1, (1,))
 
         mask = torch.ones((self.duration, self.height, self.width), dtype=torch.int32)
-        mask[start:start+t, top:top+h, left:left+w] = 0
+        mask[start : start + t, top : top + h, left : left + w] = 0
 
         # Context mask will only span the first X frames
         # (X=self.max_context_frames)
         if self.max_context_duration < self.duration:
-            mask[self.max_context_duration:, :, :] = 0
+            mask[self.max_context_duration :, :, :] = 0
 
         # --
         return mask
@@ -176,7 +191,9 @@ class _MaskGenerator(object):
             empty_context = True
             while empty_context:
 
-                mask_e = torch.ones((self.duration, self.height, self.width), dtype=torch.int32)
+                mask_e = torch.ones(
+                    (self.duration, self.height, self.width), dtype=torch.int32
+                )
                 for _ in range(self.npred):
                     mask_e *= self._sample_block_mask(p_size)
                 mask_e = mask_e.flatten()

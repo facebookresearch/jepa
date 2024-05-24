@@ -2,11 +2,11 @@ app: vjepa
 nodes: 30
 tasks_per_node: 8
 data:
-  dataset_type: VideoDataset
+  dataset_type: egovehicle_imagedataset
   datasets:
-    - /your_path_to_kinetics710_csv_file_index.csv
-    - /your_path_to_ssv2_csv_file_index.csv
-    - /your_path_to_howto100m_csv_file_index.csv
+    - /home/ncdev/Documents/darwin/data/raw/
+    # - /your_path_to_ssv2_csv_file_index.csv
+    # - /your_path_to_howto100m_csv_file_index.csv
   decode_one_clip: true
   batch_size: 10
   num_clips: 1
@@ -30,7 +30,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /your_absolute_file_path_for_saving_logs_and_checkpoints/
+  folder: /home/ncdev/Documents/darwin/jepa/logs_and_checkpoints
   write_tag: jepa
 loss:
   loss_exp: 1.0

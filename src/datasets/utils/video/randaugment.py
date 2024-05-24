@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -50,46 +50,34 @@ def _check_args_tf(kwargs):
 
 def shear_x(img, factor, **kwargs):
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, factor, 0, 0, 1, 0), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, factor, 0, 0, 1, 0), **kwargs)
 
 
 def shear_y(img, factor, **kwargs):
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, 0, 0, factor, 1, 0), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, 0, 0, factor, 1, 0), **kwargs)
 
 
 def translate_x_rel(img, pct, **kwargs):
     pixels = pct * img.size[0]
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, 0, pixels, 0, 1, 0), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, 0, pixels, 0, 1, 0), **kwargs)
 
 
 def translate_y_rel(img, pct, **kwargs):
     pixels = pct * img.size[1]
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, 0, 0, 0, 1, pixels), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, 0, 0, 0, 1, pixels), **kwargs)
 
 
 def translate_x_abs(img, pixels, **kwargs):
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, 0, pixels, 0, 1, 0), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, 0, pixels, 0, 1, 0), **kwargs)
 
 
 def translate_y_abs(img, pixels, **kwargs):
     _check_args_tf(kwargs)
-    return img.transform(
-        img.size, Image.AFFINE, (1, 0, 0, 0, 1, pixels), **kwargs
-    )
+    return img.transform(img.size, Image.AFFINE, (1, 0, 0, 0, 1, pixels), **kwargs)
 
 
 def rotate(img, degrees, **kwargs):
@@ -334,12 +322,12 @@ class AugmentOp:
         self.magnitude = magnitude
         self.hparams = hparams.copy()
         self.kwargs = {
-            "fillcolor": hparams["img_mean"]
-            if "img_mean" in hparams
-            else _FILL,
-            "resample": hparams["interpolation"]
-            if "interpolation" in hparams
-            else _RANDOM_INTERPOLATION,
+            "fillcolor": hparams["img_mean"] if "img_mean" in hparams else _FILL,
+            "resample": (
+                hparams["interpolation"]
+                if "interpolation" in hparams
+                else _RANDOM_INTERPOLATION
+            ),
         }
 
         # If magnitude_std is > 0, we introduce some randomness
@@ -356,15 +344,11 @@ class AugmentOp:
             magnitude = random.gauss(magnitude, self.magnitude_std)
         magnitude = min(_MAX_LEVEL, max(0, magnitude))  # clip to valid range
         level_args = (
-            self.level_fn(magnitude, self.hparams)
-            if self.level_fn is not None
-            else ()
+            self.level_fn(magnitude, self.hparams) if self.level_fn is not None else ()
         )
 
         if isinstance(img_list, list):
-            return [
-                self.aug_fn(img, *level_args, **self.kwargs) for img in img_list
-            ]
+            return [self.aug_fn(img, *level_args, **self.kwargs) for img in img_list]
         else:
             return self.aug_fn(img_list, *level_args, **self.kwargs)
 
@@ -512,7 +496,5 @@ def rand_augment_transform(config_str, hparams):
     ra_ops = rand_augment_ops(
         magnitude=magnitude, hparams=hparams, transforms=transforms
     )
-    choice_weights = (
-        None if weight_idx is None else _select_rand_weights(weight_idx)
-    )
+    choice_weights = None if weight_idx is None else _select_rand_weights(weight_idx)
     return RandAugment(ra_ops, num_layers, choice_weights=choice_weights)

@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) NeoCybernetica, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -13,15 +13,13 @@ import torch.nn as nn
 
 from src.models.utils.modules import Block
 from src.models.utils.pos_embs import get_2d_sincos_pos_embed, get_3d_sincos_pos_embed
-from src.utils.tensors import (
-    trunc_normal_,
-    repeat_interleave_batch
-)
+from src.utils.tensors import trunc_normal_, repeat_interleave_batch
 from src.masks.utils import apply_masks
 
 
 class VisionTransformerPredictor(nn.Module):
-    """ Vision Transformer """
+    """Vision Transformer"""
+
     def __init__(
         self,
         img_size=224,
@@ -54,10 +52,12 @@ class VisionTransformerPredictor(nn.Module):
         self.num_mask_tokens = 0
         if use_mask_tokens:
             self.num_mask_tokens = num_mask_tokens
-            self.mask_tokens = nn.ParameterList([
-                nn.Parameter(torch.zeros(1, 1, predictor_embed_dim))
-                for i in range(num_mask_tokens)
-            ])
+            self.mask_tokens = nn.ParameterList(
+                [
+                    nn.Parameter(torch.zeros(1, 1, predictor_embed_dim))
+                    for i in range(num_mask_tokens)
+                ]
+            )
 
         # Determine positional embedding
         self.input_size = img_size
@@ -77,32 +77,35 @@ class VisionTransformerPredictor(nn.Module):
                 * (img_size // patch_size)
             )
         else:
-            self.num_patches = num_patches = (
-                (img_size // patch_size)
-                * (img_size // patch_size)
+            self.num_patches = num_patches = (img_size // patch_size) * (
+                img_size // patch_size
             )
         # Position embedding
         self.uniform_power = uniform_power
         self.predictor_pos_embed = None
         self.predictor_pos_embed = nn.Parameter(
-            torch.zeros(1, num_patches, predictor_embed_dim),
-            requires_grad=False)
+            torch.zeros(1, num_patches, predictor_embed_dim), requires_grad=False
+        )
 
         # Attention Blocks
-        self.predictor_blocks = nn.ModuleList([
-            Block(
-                dim=predictor_embed_dim,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                qkv_bias=qkv_bias,
-                qk_scale=qk_scale,
-                drop=drop_rate,
-                act_layer=nn.GELU,
-                attn_drop=attn_drop_rate,
-                grid_size=grid_size,
-                grid_depth=grid_depth,
-                norm_layer=norm_layer)
-            for i in range(depth)])
+        self.predictor_blocks = nn.ModuleList(
+            [
+                Block(
+                    dim=predictor_embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    drop=drop_rate,
+                    act_layer=nn.GELU,
+                    attn_drop=attn_drop_rate,
+                    grid_size=grid_size,
+                    grid_depth=grid_depth,
+                    norm_layer=norm_layer,
+                )
+                for i in range(depth)
+            ]
+        )
 
         # Normalize & project back to input dimension
         self.predictor_norm = norm_layer(predictor_embed_dim)
@@ -128,7 +131,7 @@ class VisionTransformerPredictor(nn.Module):
                 grid_size,
                 grid_depth,
                 cls_token=False,
-                uniform_power=self.uniform_power
+                uniform_power=self.uniform_power,
             )
         else:
             sincos = get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False)
@@ -155,20 +158,26 @@ class VisionTransformerPredictor(nn.Module):
 
         # Prepare diffusion noise schedule
         b1, b2 = noise_beta
-        beta_scheduler = (b1 + i*(b2-b1)/steps for i in range(steps))
+        beta_scheduler = (b1 + i * (b2 - b1) / steps for i in range(steps))
         alpha_scheduler = []
         _alpha = 1.0
         for _beta in beta_scheduler:
-            _alpha *= 1.-_beta
+            _alpha *= 1.0 - _beta
             alpha_scheduler += [_alpha]
 
         # Sample diffusion time step
         T = torch.randint(0, steps, (len(x),))
-        alpha = torch.tensor(alpha_scheduler, device=x.device)[T].unsqueeze(-1).unsqueeze(-1)
+        alpha = (
+            torch.tensor(alpha_scheduler, device=x.device)[T]
+            .unsqueeze(-1)
+            .unsqueeze(-1)
+        )
 
         # Normalize features and apply noise
         x = torch.nn.functional.layer_norm(x, (x.size(-1),))
-        x = alpha**0.5 * x + (1.-alpha)**0.5 * torch.randn(x.shape, device=x.device)
+        x = alpha**0.5 * x + (1.0 - alpha) ** 0.5 * torch.randn(
+            x.shape, device=x.device
+        )
         return x
 
     def forward(self, ctxt, tgt, masks_ctxt, masks_tgt, mask_index=1):
@@ -179,7 +188,9 @@ class VisionTransformerPredictor(nn.Module):
         :params masks_tgt: indices of target tokens in input
         """
 
-        assert (masks_ctxt is not None) and (masks_tgt is not None), 'Cannot run predictor without mask indices'
+        assert (masks_ctxt is not None) and (
+            masks_tgt is not None
+        ), "Cannot run predictor without mask indices"
 
         if not isinstance(masks_ctxt, list):
             masks_ctxt = [masks_ctxt]
@@ -241,6 +252,6 @@ class VisionTransformerPredictor(nn.Module):
 
 def vit_predictor(**kwargs):
     model = VisionTransformerPredictor(
-        mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs)
+        mlp_ratio=4, qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs
+    )
     return model
