@@ -313,7 +313,7 @@ def run_one_epoch(
 ):
 
     classifier.train(mode=training)
-    criterion = torch.nn.BCEWithLogitsLoss()
+    criterion = torch.nn.CrossEntropyLoss()
     top1_meter = AverageMeter()
     for itr, data in enumerate(data_loader):
 
