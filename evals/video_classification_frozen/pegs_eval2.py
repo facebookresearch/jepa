@@ -365,61 +365,19 @@ def run_one_epoch(
         #print("PRINT 'labels[0]",labels[0])
         #print("PRINT length labels", len(labels))
 
-
-
         # Compute loss
         if attend_across_segments:
-            loss = 0 
-            for i in range(len(labels)):
-                loss+=criterion(outputs[0][i,:], labels[i])
-            loss = loss/len(labels)
-            # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
-        #else:
-            #loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
+            loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
+        else:
+            loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
         with torch.no_grad():
-            # kat
             if attend_across_segments:
-                sum_softmax = 0
-                print("output[0].shape[0]",outputs[0].shape[0])
-                for i in range(outputs[0].shape[0]):
-                    sum_softmax += F.softmax(outputs[0][i,:], dim=0) # no averaging (dividing by len(outputs))
-                outputs = sum_softmax
-            
-                # outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
-        # kat
-        # try:
-        #     print("outputs attend no grad:", len(outputs))
-        # except: 
-        #     "not a list"
-        # try:
-        #     print("outputs attend no grad:", outputs.shape)
-        # except: 
-        #     "not a tensor"
-            # else:
-                # outputs = sum([sum([F.softmax(ost, dim=1) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
-            #kat    
-            # # Initialize variables for correct predictions
-            # correct_count = 0
-            # # Iterate over each row (i) in outputs[0]
-            # for i in range(len(labels)):
-            #     # Get the ith row of outputs[0] and compute the maximum index
-            #     row_outputs = outputs[0][i, :]
-            #     max_index = torch.argmax(row_outputs)
-            #     # Compare the maximum index with the corresponding label
-            #     if max_index == labels[i]:
-            #         correct_count += 1
-            # # Calculate top-1 accuracy
-            # top1_acc = (100. * correct_count) / batch_size
-        
-            # kat
-            # acc_list = []
-            # for i in range(len(labels)):
-            #     value_acc = outputs[0][i,:].indices.eq(labels)
-            #     acc_list.append(value_acc)
-
-            # top1_acc = 100. * outputs.max(dim=1).indices.eq(labels).sum() / batch_size
-            # top1_acc = float(AllReduce.apply(top1_acc))
-            # top1_meter.update(top1_acc)
+                outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
+            else:
+                outputs = sum([sum([F.softmax(ost, dim=1) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
+            top1_acc = 100. * outputs.max(dim=1).indices.eq(labels).sum() / batch_size
+            top1_acc = float(AllReduce.apply(top1_acc))
+            top1_meter.update(top1_acc)
 
         if training:
             if use_bfloat16:
@@ -433,18 +391,13 @@ def run_one_epoch(
                 torch.nn.utils.clip_grad_norm_(classifier.parameters(), 1.0)
                 optimizer.step()
             optimizer.zero_grad()
-            
-    if itr % 20 == 0:
-        logger.info('[%5d] (loss: %.3f) [mem: %.2e]'
-                    % (itr, loss,
-                       torch.cuda.max_memory_allocated() / 1024.**2))
-        # if itr % 20 == 0:
-        #     logger.info('[%5d] %.3f%% (loss: %.3f) [mem: %.2e]'
-        #                 % (itr, top1_meter.avg, loss,
-        #                    torch.cuda.max_memory_allocated() / 1024.**2))
-    
-    return loss
-    # return top1_meter.avg
+
+        if itr % 20 == 0:
+            logger.info('[%5d] %.3f%% (loss: %.3f) [mem: %.2e]'
+                        % (itr, top1_meter.avg, loss,
+                           torch.cuda.max_memory_allocated() / 1024.**2))
+
+    return top1_meter.avg
 
 
 
