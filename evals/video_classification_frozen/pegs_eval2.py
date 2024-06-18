@@ -386,10 +386,16 @@ def run_one_epoch(
                 torch.nn.utils.clip_grad_norm_(classifier.parameters(), 1.0)
                 scaler.step(optimizer)
                 scaler.update()
+                for name, param in model.named_parameters():
+                    if param.grad is not None:
+                        print(f"Parameter: {name}, Gradient norm: {param.grad.norm().item()}")
             else:
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(classifier.parameters(), 1.0)
                 optimizer.step()
+                for name, param in model.named_parameters():
+                    if param.grad is not None:
+                        print(f"Parameter: {name}, Gradient norm: {param.grad.norm().item()}")
             optimizer.zero_grad()
 
         if itr % 20 == 0:
