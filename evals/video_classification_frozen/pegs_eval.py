@@ -313,7 +313,7 @@ def run_one_epoch(
 ):
 
     classifier.train(mode=training)
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.BCEWithLogitsLoss()
     top1_meter = AverageMeter()
     for itr, data in enumerate(data_loader):
 
@@ -360,6 +360,13 @@ def run_one_epoch(
         plot_guess_img(outputs[0][0,:], output_filename = 'outputs-0.png')
         plot_guess_img(labels[0], output_filename = 'labels-0.png')
 
+
+        #print("PRINT outputs[0][0:]", outputs[0][0:])
+        #print("PRINT 'labels[0]",labels[0])
+        #print("PRINT length labels", len(labels))
+
+
+
         # Compute loss
         if attend_across_segments:
             loss = 0 
@@ -367,15 +374,16 @@ def run_one_epoch(
                 loss+=criterion(outputs[0][i,:], labels[i])
             loss = loss/len(labels)
             # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
-        else:
-            loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
-        # with torch.no_grad():
+        #else:
+            #loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
+        with torch.no_grad():
             # kat
-            # if attend_across_segments:
-            #     sum_softmax = 0
-            #     for i in range(len(labels)):
-            #         sum_softmax += F.softmax(outputs[0][i,:]) # no averaging (dividing by len(outputs))
-            #     outputs = sum_softmax
+            if attend_across_segments:
+                sum_softmax = 0
+                print("output[0].shape[0]",outputs[0].shape[0])
+                for i in range(outputs[0].shape[0]):
+                    sum_softmax += F.softmax(outputs[0][i,:], dim=0) # no averaging (dividing by len(outputs))
+                outputs = sum_softmax
             
                 # outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
         # kat
@@ -427,9 +435,9 @@ def run_one_epoch(
             optimizer.zero_grad()
             
     if itr % 20 == 0:
-                logger.info('[%5d] (loss: %.3f) [mem: %.2e]'
-                            % (itr, loss,
-                               torch.cuda.max_memory_allocated() / 1024.**2))
+        logger.info('[%5d] (loss: %.3f) [mem: %.2e]'
+                    % (itr, loss,
+                       torch.cuda.max_memory_allocated() / 1024.**2))
         # if itr % 20 == 0:
         #     logger.info('[%5d] %.3f%% (loss: %.3f) [mem: %.2e]'
         #                 % (itr, top1_meter.avg, loss,
