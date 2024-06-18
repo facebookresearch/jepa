@@ -360,17 +360,17 @@ def run_one_epoch(
         plot_guess_img(outputs[0][0,:], output_filename = 'outputs-0.png')
         plot_guess_img(labels[0], output_filename = 'labels-0.png')
 
-
-        #print("PRINT outputs[0][0:]", outputs[0][0:])
-        #print("PRINT 'labels[0]",labels[0])
-        #print("PRINT length labels", len(labels))
-
-
+        # print("PRINT outputs[0][0:]", outputs[0][0:])
+        # print("PRINT 'labels[0]",labels[0])
+        # print("PRINT length labels", len(labels))
 
         # Compute loss
         if attend_across_segments:
             loss = 0 
             for i in range(len(labels)):
+                print("PRINT outputs[0][0:]", outputs[0][0:])
+                print("PRINT 'labels[0]",labels[0])
+                print("PRINT length labels", len(labels))
                 loss+=criterion(outputs[0][i,:], labels[i])
             loss = loss/len(labels)
             # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
@@ -382,6 +382,9 @@ def run_one_epoch(
                 sum_softmax = 0
                 print("output[0].shape[0]",outputs[0].shape[0])
                 for i in range(outputs[0].shape[0]):
+                    print("PRINT outputs[0][0:]", outputs[0][0:])
+                    print("PRINT 'labels[0]",labels[0])
+                    print("PRINT length labels", len(labels))
                     sum_softmax += F.softmax(outputs[0][i,:], dim=0) # no averaging (dividing by len(outputs))
                 outputs = sum_softmax
             
