@@ -19,6 +19,6 @@ def main(
     resume_preempt=False
 ):
     logger.info(f'Running evaluation: {eval_name}')
-    return importlib.import_module(f'evals.{eval_name}.pegs_eval2').main(
+    return importlib.import_module(f'evals.{eval_name}.pegs_eval').main(
         args_eval=args_eval,
         resume_preempt=resume_preempt)
