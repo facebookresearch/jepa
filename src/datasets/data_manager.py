@@ -12,7 +12,7 @@ _GLOBAL_SEED = 0
 logger = getLogger()
 
 
-def init_data(
+def init_data(  
     batch_size,
     transform=None,
     shared_transform=None,

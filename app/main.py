@@ -75,6 +75,7 @@ def process_main(rank, fname, world_size, devices):
 if __name__ == '__main__':
     args = parser.parse_args()
     num_gpus = len(args.devices)
+    
     mp.set_start_method('spawn')
     for rank in range(num_gpus):
         mp.Process(

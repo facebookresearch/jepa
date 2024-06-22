@@ -4,7 +4,7 @@ tasks_per_node: 8
 data:
   dataset_type: SdfDataset
   datasets:
-    - /home/jepa/data_sdf/sdf_csv_file_index.csv
+    - /home/justwantpost/drive/ShapeNetCore.v2/paths_32.csv
   # decode_one_clip: true
   batch_size: 4
   num_clips: 1
@@ -28,7 +28,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /home/jepa/logs_n_checkpoints/
+  folder: /home/justwantpost/drive/jepa/logs_n_checkpoints/
   write_tag: jepa_sdf
 loss:
   loss_exp: 1.0

@@ -84,7 +84,7 @@ class SdfDataset(torch.utils.data.Dataset):
         self.transform = transform
 
         # Load video paths and labels
-        samples, labels = [], []
+        samples, labels, names = [], [], []
         self.num_samples_per_dataset = []
         for data_path in self.data_paths:
 
@@ -92,6 +92,7 @@ class SdfDataset(torch.utils.data.Dataset):
                 data = pd.read_csv(data_path, header=None, delimiter=" ")
                 samples += list(data.values[:, 0])
                 labels += list(data.values[:, 1])
+                names += [".".join(sample.split('.')[:-2]) + ".obj" for sample in samples]
                 num_samples = len(data)
                 self.num_samples_per_dataset.append(num_samples)
                 print(f'Loaded {num_samples} samples from {data_path}')
@@ -100,6 +101,7 @@ class SdfDataset(torch.utils.data.Dataset):
 
         self.samples = samples
         self.labels = labels
+        self.names = names
 
     def __getitem__(self, index):
         sample = self.samples[index]
@@ -112,8 +114,10 @@ class SdfDataset(torch.utils.data.Dataset):
         # apply data augmentations
         if self.transform is not None:
             sdf_obj = self.transform(sdf_obj)
+            
+        name = self.names[index]
 
-        return [sdf_obj], label
+        return [sdf_obj], label, name
 
     def __len__(self):
         return len(self.samples)

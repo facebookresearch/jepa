@@ -75,6 +75,78 @@ import numpy as np
 import csv
 
 
+### FOR VISUALIZATION IN WANDB
+import numpy as np
+from skimage import measure
+import open3d as o3d
+
+def create_mask_for_original_tensor(mask, original_shape, tubelet_size=2, patch_size=16):
+    original_mask = torch.ones(original_shape)
+    _, H, W = mask.shape
+
+    # Iterate over the mask tensor to identify zeroed patches
+    # TODO: no loops version
+    for t in range(mask.shape[0]):
+        for h in range(H):
+            for w in range(W):
+                if mask[t, h, w] == 0:
+                    # Calculate the corresponding indices in the original tensor
+                    t_start = t * tubelet_size
+                    t_end = t_start + tubelet_size
+                    h_start = h * patch_size
+                    h_end = h_start + patch_size
+                    w_start = w * patch_size
+                    w_end = w_start + patch_size
+                    
+                    original_mask[t_start:t_end, h_start:h_end, w_start:w_end] = 0
+    return original_mask
+
+def sdf2mesh(sdf, view=False, save=False):
+    
+    level = 2 / sdf.shape[0]
+    if sdf.min() > level:
+        level = sdf.min() + 2 / sdf.shape[0]
+
+    # Use marching cubes to obtain the surface mesh
+    vertices, faces, normals, _ = measure.marching_cubes(sdf, level=level)
+
+    # Create an Open3D mesh object
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(vertices)
+    mesh.triangles = o3d.utility.Vector3iVector(faces)
+
+    # compute vertex normals
+    #TODO: pass normal to mesh, without recomputing
+    mesh.compute_vertex_normals()
+    mesh.triangle_normals = o3d.utility.Vector3dVector([]) # Stupid fix to remove warning https://github.com/isl-org/Open3D/issues/2933
+
+    # Save the mesh to an .obj file
+    if save:
+        o3d.io.write_triangle_mesh(save, mesh)
+
+    # (Optional) Visualize the mesh
+    if view:
+        o3d.visualization.draw_geometries([mesh])
+        
+    return mesh
+
+def visualize_sdf_with_mask(one_clip, original_mask, save_name=False):
+
+    original_mask = (original_mask).int()
+    
+    torch.save(original_mask, 'original_mask.pt')
+    torch.save(one_clip, 'one_clip.pt')
+    assert False
+
+    one_clip[original_mask == 0] = 1e6
+    
+    masked_frame = one_clip.cpu().numpy()
+
+    mesh = sdf2mesh(masked_frame, view=False, save=save_name)
+    
+    return mesh
+
+
 
 
 def main(args, resume_preempt=False):
@@ -170,6 +242,7 @@ def main(args, resume_preempt=False):
     cfgs_logging = args.get('logging')
     folder = cfgs_logging.get('folder')
     tag = cfgs_logging.get('write_tag')
+    visualization_errors_num = 0
 
     # ----------------------------------------------------------------------- #
     # ----------------------------------------------------------------------- #
@@ -397,19 +470,40 @@ def main(args, resume_preempt=False):
             itr_start_time = time.time()
 
             try:
-                udata, masks_enc, masks_pred = next(loader)
+                udata, masks_enc, masks_pred, whole_mask_for_vis = next(loader)
             except Exception:
                 logger.info('Exhausted data loaders. Refreshing...')
                 loader = iter(unsupervised_loader)
-                udata, masks_enc, masks_pred = next(loader)
+                udata, masks_enc, masks_pred, whole_mask_for_vis = next(loader)
             assert len(masks_enc) == len(masks_pred), \
                 'Currently require num encoder masks = num predictor masks'
 
-            def load_clips():
+            def load_clips(visualization_errors_num):
                 # -- unsupervised video clips
                 # Put each clip on the GPU and concatenate along batch
                 # dimension
                 clips = torch.cat([u.to(device, non_blocking=True) for u in udata[0]], dim=0)
+                obj_names = [u for u in udata[-1]]
+                
+                ### START VISUALIZATION
+                
+                for C in range(batch_size):
+                    one_clip = clips[C].permute(1, 2, 3, 0).squeeze()
+                    original_mask = create_mask_for_original_tensor(whole_mask_for_vis[C], one_clip.shape, tubelet_size, patch_size)
+                    no_mask = torch.ones_like(original_mask)
+                    og_mesh_name, masked_mesh_name = 'og_mesh.obj', 'masked_mesh.obj'
+                    # og_mesh = visualize_sdf_with_mask(one_clip, no_mask, og_mesh_name)
+                    masked_mesh = visualize_sdf_with_mask(one_clip, original_mask, masked_mesh_name)
+                    if og_mesh == 1 or masked_mesh == 1:
+                        visualization_errors_num += 1
+                    else:   
+                        wandb.log({
+                            "output_mesh":wandb.Object3D(open(og_mesh_name)),
+                            "output_mesh_masked":wandb.Object3D(open(masked_mesh_name)),
+                            "input_mesh":wandb.Object3D(open(obj_names[C]))
+                        })
+                
+                ### END VISUALIZATION
 
                 # Put each mask-enc/mask-pred pair on the GPU and reuse the
                 # same mask pair for each clip
@@ -425,8 +519,8 @@ def main(args, resume_preempt=False):
                     _masks_enc.append(_me)
                     _masks_pred.append(_mp)
 
-                return (clips, _masks_enc, _masks_pred)
-            clips, masks_enc, masks_pred = load_clips()
+                return (clips, _masks_enc, _masks_pred, visualization_errors_num)
+            clips, masks_enc, masks_pred, visualization_errors_num = load_clips(visualization_errors_num)
             
             if not os.path.exists('tensors_sdf.pth'):
                 tensors = {'tensor1': clips,
@@ -553,7 +647,8 @@ def main(args, resume_preempt=False):
                             "grad_stats.global_norm": grad_stats.global_norm,
                             "grad_stats_pred.global_norm": grad_stats_pred.global_norm,
                             "gpu_etime_ms": gpu_etime_ms,
-                            "iter_elapsed_time_ms": iter_elapsed_time_ms
+                            "iter_elapsed_time_ms": iter_elapsed_time_ms,
+                            "visualization errors num": visualization_errors_num
                         }
                     )
                 

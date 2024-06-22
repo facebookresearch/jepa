@@ -52,18 +52,17 @@ class MaskCollator(object):
 
     def __call__(self, batch):
 
-
         batch_size = len(batch)
         collated_batch = torch.utils.data.default_collate(batch)
 
         collated_masks_pred, collated_masks_enc = [], []
         for i, mask_generator in enumerate(self.mask_generators):
-            masks_enc, masks_pred = mask_generator(batch_size)
+            masks_enc, masks_pred, whole_mask = mask_generator(batch_size)
 
             collated_masks_enc.append(masks_enc)
             collated_masks_pred.append(masks_pred)
-
-        return collated_batch, collated_masks_enc, collated_masks_pred
+            
+        return collated_batch, collated_masks_enc, collated_masks_pred, whole_mask
 
 
 class _MaskGenerator(object):
@@ -172,7 +171,7 @@ class _MaskGenerator(object):
             aspect_ratio_scale=self.aspect_ratio,
         )
 
-        collated_masks_pred, collated_masks_enc = [], []
+        collated_masks_pred, collated_masks_enc, collated_whole_masks = [], [], []
         min_keep_enc = min_keep_pred = self.duration * self.height * self.width # 1568 = 8 (as 16 frames / 2 tubelet_size) * 14p * 14p
         for _ in range(batch_size):
 
@@ -188,10 +187,14 @@ class _MaskGenerator(object):
                     current_masks.append(mask_block)
                     mask_e *= mask_block
                 
-                if not os.path.exists('masks_sdf.pt'):
-                    torch.save(current_masks, 'masks_sdf.pt')
+                ### start for visualizations
+                masks_list = [mask.squeeze() for mask in current_masks]
+                whole_mask = torch.ones_like(masks_list[0])
+                for mask in masks_list:
+                    whole_mask *= mask
+                ### end for visualizations
+
                 mask_e = mask_e.flatten()
-                # print('mask_e shape', mask_e.shape)
 
                 mask_p = torch.argwhere(mask_e == 0).squeeze()
                 mask_e = torch.nonzero(mask_e).squeeze()
@@ -202,6 +205,7 @@ class _MaskGenerator(object):
                     min_keep_enc = min(min_keep_enc, len(mask_e))
                     collated_masks_pred.append(mask_p)
                     collated_masks_enc.append(mask_e)
+                    collated_whole_masks.append(whole_mask)
 
         # not used
         if self.max_keep is not None:
@@ -214,4 +218,4 @@ class _MaskGenerator(object):
         collated_masks_enc = [cm[:min_keep_enc] for cm in collated_masks_enc]
         collated_masks_enc = torch.utils.data.default_collate(collated_masks_enc)
 
-        return collated_masks_enc, collated_masks_pred
+        return collated_masks_enc, collated_masks_pred, collated_whole_masks
