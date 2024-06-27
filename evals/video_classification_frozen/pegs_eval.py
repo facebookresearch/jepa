@@ -369,7 +369,7 @@ def run_one_epoch(
             loss = 0 
             for i in range(len(labels)):
                 print("PRINT outputs[0][0:]", outputs[0][0:])
-                print("PRINT 'labels[0]",labels[0])
+                # print("PRINT 'labels[0]",labels[0])
                 print("PRINT length labels", len(labels))
                 loss+=criterion(outputs[0][i,:], labels[i])
             loss = loss/len(labels)
@@ -383,7 +383,7 @@ def run_one_epoch(
                 print("output[0].shape[0]",outputs[0].shape[0])
                 for i in range(outputs[0].shape[0]):
                     print("PRINT outputs[0][0:]", outputs[0][0:])
-                    print("PRINT 'labels[0]",labels[0])
+                    # print("PRINT 'labels[0]",labels[0])
                     print("PRINT length labels", len(labels))
                     sum_softmax += F.softmax(outputs[0][i,:], dim=0) # no averaging (dividing by len(outputs))
                 outputs = sum_softmax
