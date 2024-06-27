@@ -24,7 +24,11 @@ class PegAttentiveClassifier(nn.Module):
         print("input to classifier shape:", x.shape)
         x = torch.sum(x, dim=1)
         print("summed x:", x.shape)
+        print("min after sum", torch.min(x))
+        print("max after sum", torch.max(x))
         x = self.linear(x)
+        print("min after linear", torch.min(x))
+        print("max after linear", torch.max(x))
         return x
         
         # flattened_x = x.flatten(1,-1)
