@@ -192,6 +192,8 @@ class VisionTransformer(nn.Module):
         if self.norm is not None:
             x = self.norm(x)
         print("shape of encoder:", x.shape)
+        print("min of encoded", torch.min(x))
+        print("max of encoded", torch.max(x))
         return x
 
     def interpolate_pos_encoding(self, x, pos_embed):
