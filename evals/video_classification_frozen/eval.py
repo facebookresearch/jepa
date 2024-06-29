@@ -33,6 +33,9 @@ from src.models.attentive_pooler import AttentiveClassifier
 from src.datasets.data_manager import (
     init_data,
 )
+from torch.utils.data import DataLoader 
+
+from src.datasets.football_frames_dataset import FramesDataset
 from src.utils.distributed import (
     init_distributed,
     AllReduce
@@ -129,8 +132,8 @@ def main(args_eval, resume_preempt=False):
         device = torch.device('cuda:0')
         torch.cuda.set_device(device)
 
-    world_size, rank = init_distributed()
-    logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
+    # world_size, rank = init_distributed()
+    # logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
 
     # -- log/checkpointing paths
     folder = os.path.join(pretrain_folder, 'video_classification_frozen/')
@@ -138,15 +141,15 @@ def main(args_eval, resume_preempt=False):
         folder = os.path.join(folder, eval_tag)
     if not os.path.exists(folder):
         os.makedirs(folder, exist_ok=True)
-    log_file = os.path.join(folder, f'{tag}_r{rank}.csv')
-    latest_path = os.path.join(folder, f'{tag}-latest.pth.tar')
+    # log_file = os.path.join(folder, f'{tag}_r{rank}.csv')
+    # latest_path = os.path.join(folder, f'{tag}-latest.pth.tar')
 
     # -- make csv_logger
-    if rank == 0:
-        csv_logger = CSVLogger(log_file,
-                               ('%d', 'epoch'),
-                               ('%.5f', 'loss'),
-                               ('%.5f', 'acc'))
+    # if rank == 0:
+    #     csv_logger = CSVLogger(log_file,
+    #                            ('%d', 'epoch'),
+    #                            ('%.5f', 'loss'),
+    #                            ('%.5f', 'acc'))
 
     # Initialize model
 
@@ -164,16 +167,16 @@ def main(args_eval, resume_preempt=False):
         use_SiLU=use_SiLU,
         tight_SiLU=tight_SiLU,
         use_sdpa=use_sdpa)
-    if pretrain_frames_per_clip == 1:
-        # Process each frame independently and aggregate
-        encoder = FrameAggregation(encoder).to(device)
-    else:
-        # Process each video clip independently and aggregate
-        encoder = ClipAggregation(
-            encoder,
-            tubelet_size=tubelet_size,
-            attend_across_segments=attend_across_segments
-        ).to(device)
+    # if pretrain_frames_per_clip == 1:
+    #     # Process each frame independently and aggregate
+    #     encoder = FrameAggregation(encoder).to(device)
+    # else:
+    #     # Process each video clip independently and aggregate
+    #     encoder = ClipAggregation(
+    #         encoder,
+    #         tubelet_size=tubelet_size,
+    #         attend_across_segments=attend_across_segments
+    #     ).to(device)
     encoder.eval()
     for p in encoder.parameters():
         p.requires_grad = False
@@ -183,41 +186,48 @@ def main(args_eval, resume_preempt=False):
         embed_dim=encoder.embed_dim,
         num_heads=encoder.num_heads,
         depth=1,
-        num_classes=num_classes,
+        num_classes=12,
     ).to(device)
 
-    train_loader = make_dataloader(
-        dataset_type=dataset_type,
-        root_path=train_data_path,
-        resolution=resolution,
-        frames_per_clip=eval_frames_per_clip,
-        frame_step=eval_frame_step,
-        eval_duration=eval_duration,
-        num_segments=eval_num_segments if attend_across_segments else 1,
-        num_views_per_segment=1,
-        allow_segment_overlap=True,
-        batch_size=batch_size,
-        world_size=world_size,
-        rank=rank,
-        training=True)
-    val_loader = make_dataloader(
-        dataset_type=dataset_type,
-        root_path=val_data_path,
-        resolution=resolution,
-        frames_per_clip=eval_frames_per_clip,
-        frame_step=eval_frame_step,
-        num_segments=eval_num_segments,
-        eval_duration=eval_duration,
-        num_views_per_segment=eval_num_views_per_segment,
-        allow_segment_overlap=True,
-        batch_size=batch_size,
-        world_size=world_size,
-        rank=rank,
-        training=False)
+    # train_loader = make_dataloader(
+    #     dataset_type=dataset_type,
+    #     root_path=train_data_path,
+    #     resolution=resolution,
+    #     frames_per_clip=eval_frames_per_clip,
+    #     frame_step=eval_frame_step,
+    #     eval_duration=eval_duration,
+    #     num_segments=eval_num_segments if attend_across_segments else 1,
+    #     num_views_per_segment=1,
+    #     allow_segment_overlap=True,
+    #     batch_size=batch_size,
+    #     world_size=world_size,
+    #     rank=rank,
+    #     training=True)
+    # val_loader = make_dataloader(
+    #     dataset_type=dataset_type,
+    #     root_path=val_data_path,
+    #     resolution=resolution,
+    #     frames_per_clip=eval_frames_per_clip,
+    #     frame_step=eval_frame_step,
+    #     num_segments=eval_num_segments,
+    #     eval_duration=eval_duration,
+    #     num_views_per_segment=eval_num_views_per_segment,
+    #     allow_segment_overlap=True,
+    #     batch_size=batch_size,
+    #     world_size=world_size,
+    #     rank=rank,
+    #     training=False)
+
+    # # -- optimizer and scheduler
+    val_dataset = FramesDataset('../src/datasets/spotting-ball-2024')
+    val_loader = DataLoader(val_dataset, batch_size=8)
+
+    train_dataset = FramesDataset('../src/datasets/spotting-ball-2024')
+    train_loader = DataLoader(train_dataset, batch_size=8)
+
     ipe = len(train_loader)
     logger.info(f'Dataloader created... iterations per epoch: {ipe}')
 
-    # -- optimizer and scheduler
     optimizer, scaler, scheduler, wd_scheduler = init_opt(
         classifier=classifier,
         wd=wd,
@@ -228,36 +238,36 @@ def main(args_eval, resume_preempt=False):
         warmup=warmup,
         num_epochs=num_epochs,
         use_bfloat16=use_bfloat16)
-    classifier = DistributedDataParallel(classifier, static_graph=True)
+    # classifier = DistributedDataParallel(classifier, static_graph=True)
 
-    # -- load training checkpoint
-    start_epoch = 0
-    if resume_checkpoint:
-        classifier, optimizer, scaler, start_epoch = load_checkpoint(
-            device=device,
-            r_path=latest_path,
-            classifier=classifier,
-            opt=optimizer,
-            scaler=scaler)
-        for _ in range(start_epoch*ipe):
-            scheduler.step()
-            wd_scheduler.step()
+    # # -- load training checkpoint
+    # start_epoch = 0
+    # if resume_checkpoint:
+    #     classifier, optimizer, scaler, start_epoch = load_checkpoint(
+    #         device=device,
+    #         r_path=latest_path,
+    #         classifier=classifier,
+    #         opt=optimizer,
+    #         scaler=scaler)
+    #     for _ in range(start_epoch*ipe):
+    #         scheduler.step()
+    #         wd_scheduler.step()
 
-    def save_checkpoint(epoch):
-        save_dict = {
-            'classifier': classifier.state_dict(),
-            'opt': optimizer.state_dict(),
-            'scaler': None if scaler is None else scaler.state_dict(),
-            'epoch': epoch,
-            'batch_size': batch_size,
-            'world_size': world_size,
-            'lr': lr
-        }
-        if rank == 0:
-            torch.save(save_dict, latest_path)
+    # def save_checkpoint(epoch):
+    #     save_dict = {
+    #         'classifier': classifier.state_dict(),
+    #         'opt': optimizer.state_dict(),
+    #         'scaler': None if scaler is None else scaler.state_dict(),
+    #         'epoch': epoch,
+    #         'batch_size': batch_size,
+    #         'world_size': world_size,
+    #         'lr': lr
+    #     }
+    #     if rank == 0:
+    #         torch.save(save_dict, latest_path)
 
     # TRAIN LOOP
-    for epoch in range(start_epoch, num_epochs):
+    for epoch in range(0, 1):
         logger.info('Epoch %d' % (epoch + 1))
         train_acc = run_one_epoch(
             device=device,
@@ -290,9 +300,9 @@ def main(args_eval, resume_preempt=False):
             use_bfloat16=use_bfloat16)
 
         logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
-        if rank == 0:
-            csv_logger.log(epoch + 1, train_acc, val_acc)
-        save_checkpoint(epoch + 1)
+        # if rank == 0:
+    #         csv_logger.log(epoch + 1, train_acc, val_acc)
+    #     save_checkpoint(epoch + 1)
 
 
 def run_one_epoch(
@@ -315,46 +325,48 @@ def run_one_epoch(
     criterion = torch.nn.CrossEntropyLoss()
     top1_meter = AverageMeter()
     for itr, data in enumerate(data_loader):
-
         if training:
             scheduler.step()
             wd_scheduler.step()
+        print("Iter", itr, data[0].shape, data[1].shape)
 
         with torch.cuda.amp.autocast(dtype=torch.float16, enabled=use_bfloat16):
 
             # Load data and put on GPU
-            clips = [
-                [dij.to(device, non_blocking=True) for dij in di]  # iterate over spatial views of clip
-                for di in data[0]  # iterate over temporal index of clip
-            ]
-            clip_indices = [d.to(device, non_blocking=True) for d in data[2]]
+            # clips = [
+            #     [dij.to(device, non_blocking=True) for dij in di]  # iterate over spatial views of clip
+            #     for di in data[0]  # iterate over temporal index of clip
+            # ]
+            # clip_indices = [d.to(device, non_blocking=True) for d in data[2]]
+            x = data[0].to(device)
             labels = data[1].to(device)
             batch_size = len(labels)
 
             # Forward and prediction
             with torch.no_grad():
-                outputs = encoder(clips, clip_indices)
-                if not training:
-                    if attend_across_segments:
-                        outputs = [classifier(o) for o in outputs]
-                    else:
-                        outputs = [[classifier(ost) for ost in os] for os in outputs]
-            if training:
-                if attend_across_segments:
-                    outputs = [classifier(o) for o in outputs]
-                else:
-                    outputs = [[classifier(ost) for ost in os] for os in outputs]
+                outputs = encoder(x)
+                print("Outputs shape before", outputs.shape)
+            outputs = classifier(outputs)
+            loss = criterion(outputs, labels)
+            print("Outputs shape after", outputs.shape)
+                # if not training:
+                #     if attend_across_segments:
+                #         outputs = [classifier(o) for o in outputs]
+                #     else:
+                #         outputs = [[classifier(ost) for ost in os] for os in outputs]
+            # if training:
+            #     if attend_across_segments:
+            #         outputs = [classifier(o) for o in outputs]
+            #     else:
+            #         outputs = [[classifier(ost) for ost in os] for os in outputs]
 
         # Compute loss
-        if attend_across_segments:
-            loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
-        else:
-            loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
+        # if attend_across_segments:
+        #     loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
+        # else:
+        #     loss = sum([sum([criterion(ost, labels) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
         with torch.no_grad():
-            if attend_across_segments:
-                outputs = sum([F.softmax(o, dim=1) for o in outputs]) / len(outputs)
-            else:
-                outputs = sum([sum([F.softmax(ost, dim=1) for ost in os]) for os in outputs]) / len(outputs) / len(outputs[0])
+            outputs = F.softmax(outputs, dim=1)
             top1_acc = 100. * outputs.max(dim=1).indices.eq(labels).sum() / batch_size
             top1_acc = float(AllReduce.apply(top1_acc))
             top1_meter.update(top1_acc)
@@ -429,7 +441,7 @@ def load_pretrained(
         if k not in pretrained_dict:
             logger.info(f'key "{k}" could not be found in loaded state dict')
         elif pretrained_dict[k].shape != v.shape:
-            logger.info(f'key "{k}" is of different shape in model and loaded state dict')
+            logger.info(f'key "{k}" is of different shape in model and loaded state dict, {pretrained_dict[k].shape} != { v.shape}')
             pretrained_dict[k] = v
     msg = encoder.load_state_dict(pretrained_dict, strict=False)
     print(encoder)

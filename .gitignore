@@ -1,2 +1,4 @@
 .*.swp
 *.pyc
+/torch310/
+src/datasets/spotting-ball-2024
