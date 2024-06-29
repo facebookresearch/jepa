@@ -4,13 +4,13 @@ data:
   crop_size: 32
   dataset_type: SdfDataset
   datasets:
-  - /home/jepa/data_sdf/sdf_csv_file_index.csv
+  - /home/denis/Documents/TUM/ShapeNetCore.v2/paths_32.csv
   num_clips: 1
   num_frames: 32
   num_workers: 12
   patch_size: 4
   pin_mem: true
-  tubelet_size: 2
+  tubelet_size: 4
 data_aug:
   auto_augment: false
   motion_shift: false
@@ -22,7 +22,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /home/jepa/logs_n_checkpoints/
+  folder: /home/denis/Documents/TUM/jepa/logs_n_checkpoints/
   write_tag: jepa_sdf
 loss:
   loss_exp: 1.0
@@ -37,18 +37,6 @@ mask:
   spatial_scale:
   - 0.15
   - 0.15
-  temporal_scale:
-  - 1.0
-  - 1.0
-- aspect_ratio:
-  - 0.75
-  - 1.5
-  max_keep: null
-  max_temporal_keep: 1.0
-  num_blocks: 2
-  spatial_scale:
-  - 0.7
-  - 0.7
   temporal_scale:
   - 1.0
   - 1.0
@@ -73,7 +61,7 @@ optimization:
   ema:
   - 0.998
   - 1.0
-  epochs: 300
+  epochs: 1
   final_lr: 1.0e-06
   final_weight_decay: 0.4
   ipe: 300

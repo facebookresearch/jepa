@@ -15,6 +15,7 @@ import wandb
 
 from app.scaffold import main as app_main
 from src.utils.distributed import init_distributed
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -62,8 +63,6 @@ def process_main(rank, fname, world_size, devices):
             config=config_dictionary
         )
 
-
-
     # Init distributed (access to comm between GPUS on same machine)
     world_size, rank = init_distributed(rank_and_world_size=(rank, world_size))
     logger.info(f'Running... (rank: {rank}/{world_size})')
@@ -73,12 +72,16 @@ def process_main(rank, fname, world_size, devices):
 
 
 if __name__ == '__main__':
+
+    os.environ['NUMEXPR_MAX_THREADS'] = '8'
     args = parser.parse_args()
     num_gpus = len(args.devices)
     
     mp.set_start_method('spawn')
-    for rank in range(num_gpus):
-        mp.Process(
-            target=process_main,
-            args=(rank, args.fname, num_gpus, args.devices)
-        ).start()
+    # for rank in range(num_gpus):
+    #     mp.Process(
+    #         target=process_main,
+    #         args=(rank, args.fname, num_gpus, args.devices)
+    #     ).start()
+
+    process_main(0, args.fname, num_gpus, args.devices)

@@ -74,6 +74,7 @@ import torch
 import numpy as np
 import csv
 
+import warnings
 
 ### FOR VISUALIZATION IN WANDB
 import numpy as np
@@ -101,12 +102,7 @@ def create_mask_for_original_tensor(mask, original_shape, tubelet_size=2, patch_
                     original_mask[t_start:t_end, h_start:h_end, w_start:w_end] = 0
     return original_mask
 
-def sdf2mesh(sdf, view=False, save=False):
-    
-    level = 2 / sdf.shape[0]
-    if sdf.min() > level:
-        level = sdf.min() + 2 / sdf.shape[0]
-
+def sdf2mesh(sdf, view=False, save=False, level=2/32):
     # Use marching cubes to obtain the surface mesh
     vertices, faces, normals, _ = measure.marching_cubes(sdf, level=level)
 
@@ -116,13 +112,11 @@ def sdf2mesh(sdf, view=False, save=False):
     mesh.triangles = o3d.utility.Vector3iVector(faces)
 
     # compute vertex normals
-    #TODO: pass normal to mesh, without recomputing
     mesh.compute_vertex_normals()
-    mesh.triangle_normals = o3d.utility.Vector3dVector([]) # Stupid fix to remove warning https://github.com/isl-org/Open3D/issues/2933
 
     # Save the mesh to an .obj file
     if save:
-        o3d.io.write_triangle_mesh(save, mesh)
+        o3d.io.write_triangle_mesh('output_mesh.obj', mesh)
 
     # (Optional) Visualize the mesh
     if view:
@@ -130,13 +124,13 @@ def sdf2mesh(sdf, view=False, save=False):
         
     return mesh
 
-def visualize_sdf_with_mask(one_clip, original_mask, save_name=False):
+def visualize_sdf_with_mask(one_clip, original_mask, save_name=False, save_params=False):
 
     original_mask = (original_mask).int()
-    
-    torch.save(original_mask, 'original_mask.pt')
-    torch.save(one_clip, 'one_clip.pt')
-    assert False
+
+    if save_params:      
+        torch.save(original_mask, 'original_mask.pt')
+        torch.save(one_clip, 'one_clip.pt')
 
     one_clip[original_mask == 0] = 1e6
     
@@ -147,6 +141,34 @@ def visualize_sdf_with_mask(one_clip, original_mask, save_name=False):
     return mesh
 
 
+def get_mask_sdf(mask):
+    mask_pad = mask
+
+    for i in range(3):
+        shape = list(mask_pad.shape)
+        shape[i] = 1
+        edges = torch.ones(shape)
+        mask_pad = torch.cat([edges, mask_pad, edges], axis=i)
+
+    
+    mask_edge = (
+        (mask_pad[1:-1, 1:-1, 1:-1] == 0) & (
+            (mask_pad[:-2, 1:-1, 1:-1] == 1) | 
+            (mask_pad[2:, 1:-1, 1:-1] == 1) | 
+
+            (mask_pad[1:-1, :-2, 1:-1] == 1) | 
+            (mask_pad[1:-1:, 2:, 1:-1] == 1) | 
+
+            (mask_pad[1:-1, 1:-1, :-2] == 1) | 
+            (mask_pad[1:-1, 1:-1, 2:] == 1)
+        )
+    )
+
+    mask_sdf = torch.ones_like(mask, dtype=float)
+    mask_sdf += (mask == 0) * (mask_edge == 0) * (-2)
+    mask_sdf += (mask_edge == 1) * (-0.9)
+
+    return mask_sdf
 
 
 def main(args, resume_preempt=False):
@@ -490,18 +512,37 @@ def main(args, resume_preempt=False):
                 for C in range(batch_size):
                     one_clip = clips[C].permute(1, 2, 3, 0).squeeze()
                     original_mask = create_mask_for_original_tensor(whole_mask_for_vis[C], one_clip.shape, tubelet_size, patch_size)
-                    no_mask = torch.ones_like(original_mask)
+                    # no_mask = torch.ones_like(original_mask)
                     og_mesh_name, masked_mesh_name = 'og_mesh.obj', 'masked_mesh.obj'
+                    
+                    mask_sdf = get_mask_sdf(original_mask)
+
+                    obj_mesh = sdf2mesh(one_clip.cpu().numpy(), level=2 / one_clip.shape[0])
+                    obj_mesh.paint_uniform_color([0, 0.706, 1])
+
+                    mask_mesh = sdf2mesh(mask_sdf.cpu().numpy(), level=0)
+                    mask_mesh.paint_uniform_color([1, 0.706, 0])
+
+                    o3d.io.write_triangle_mesh(og_mesh_name, obj_mesh)
+                    o3d.io.write_triangle_mesh(masked_mesh_name, obj_mesh + mask_mesh)
+
+                    wandb.log({
+                        "output_mesh":wandb.Object3D(open(og_mesh_name)),
+                        "output_mesh_masked":wandb.Object3D(open(masked_mesh_name)),
+                        "input_mesh":wandb.Object3D(open(obj_names[C]))
+                    })
+
                     # og_mesh = visualize_sdf_with_mask(one_clip, no_mask, og_mesh_name)
-                    masked_mesh = visualize_sdf_with_mask(one_clip, original_mask, masked_mesh_name)
-                    if og_mesh == 1 or masked_mesh == 1:
-                        visualization_errors_num += 1
-                    else:   
-                        wandb.log({
-                            "output_mesh":wandb.Object3D(open(og_mesh_name)),
-                            "output_mesh_masked":wandb.Object3D(open(masked_mesh_name)),
-                            "input_mesh":wandb.Object3D(open(obj_names[C]))
-                        })
+                    # masked_mesh = visualize_sdf_with_mask(one_clip, original_mask, masked_mesh_name, save_params=True)
+                    # if og_mesh == 1 or masked_mesh == 1:
+                    #     visualization_errors_num += 1
+                    # else:   
+                    #     wandb.log({
+                    #         "output_mesh":wandb.Object3D(open(og_mesh_name)),
+                    #         "output_mesh_masked":wandb.Object3D(open(masked_mesh_name)),
+                    #         "input_mesh":wandb.Object3D(open(obj_names[C]))
+                    #     })
+                
                 
                 ### END VISUALIZATION
 
