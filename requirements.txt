@@ -7,7 +7,6 @@ submitit
 braceexpand
 webdataset
 timm
-decord
 pandas
 einops
 beartype
