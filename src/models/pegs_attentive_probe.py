@@ -20,7 +20,7 @@ class PegAttentiveClassifier(nn.Module):
         # self.linear = nn.Linear(12544*embed_dim, num_classes, bias=False)
         self.linear = nn.Linear(embed_dim, num_classes, bias=True)
         self.softmax = nn.Softmax()
-        self.avgpool = nn.AvgPool2d(10, stride=2)
+        self.avgpool = nn.AvgPool1d(10, stride=2)
 
     def forward(self, x):
         print("input to classifier shape:", x.shape)
@@ -32,8 +32,8 @@ class PegAttentiveClassifier(nn.Module):
         # print("min after softmax", torch.min(x))
         # print("max after softmax", torch.max(x))
         x = self.avgpool(x)
-        print("min after avgpool", torch.min(x))
-        print("max after avgpool", torch.max(x))
+        print("min after avgpool1d", torch.min(x))
+        print("max after avgpool1d", torch.max(x))
         x = self.linear(x)
         print("min after linear", torch.min(x))
         print("max after linear", torch.max(x))
