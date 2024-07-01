@@ -371,7 +371,7 @@ def run_one_epoch(
                 print("PRINT outputs[0][0:]", outputs[0][0:])
                 # print("PRINT 'labels[0]",labels[0])
                 print("PRINT length labels", len(labels))
-                loss+=criterion(outputs[0][i,:], labels[i])
+                loss+=criterion(outputs[0][i,:], labels[i].unsqueeze(0))
             loss = loss/len(labels)
             # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
         #else:
