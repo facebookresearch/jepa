@@ -18,7 +18,8 @@ class PegAttentiveClassifier(nn.Module):
     ):
         super().__init__()
         # self.linear = nn.Linear(12544*embed_dim, num_classes, bias=False)
-        self.linear = nn.Linear(embed_dim, num_classes, bias=True)
+        # self.linear = nn.Linear(embed_dim, num_classes, bias=True)
+        self.linear = nn.Linear(508, num_classes, bias=True) # 1024 becomes 508 after the avgpool1d
         self.softmax = nn.Softmax()
         self.avgpool = nn.AvgPool1d(10, stride=2)
 
