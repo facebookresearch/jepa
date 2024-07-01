@@ -21,7 +21,7 @@ class PegAttentiveClassifier(nn.Module):
         # self.linear = nn.Linear(embed_dim, num_classes, bias=True)
         self.linear = nn.Linear(508, num_classes, bias=True) # 1024 becomes 508 after the avgpool1d
         self.softmax = nn.Softmax()
-        self.avgpool = nn.AvgPool1d(20, stride=2)
+        self.avgpool = nn.AvgPool1d(30, stride=10)
 
     def forward(self, x):
         print("input to classifier shape:", x.shape)
