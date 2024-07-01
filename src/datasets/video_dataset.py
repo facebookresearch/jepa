@@ -142,6 +142,12 @@ class VideoDataset(torch.utils.data.Dataset):
                 num_samples = len(data)
                 self.num_samples_per_dataset.append(len(data))
 
+            elif data_path[-11:] == '_directory/':
+                samples = [file for file in os.listdir(data_path) if file.endswith('.mp4')]
+                labels = [np.load(file) for file in os.listdir(data_path) if file.endswith('.npy')]
+                num_samples = len(samples)
+                self.num_samples_per_dataset.append(num_samples)
+
         # [Optional] Weights for each sample to be used by downstream
         # weighted video sampler
         self.sample_weights = None
@@ -152,6 +158,22 @@ class VideoDataset(torch.utils.data.Dataset):
 
         self.samples = samples
         self.labels = labels
+        
+    # kat 
+    def load_label_from_file(self, label_path):
+        # Load NumPy array from file
+        label_array = np.load(label_path)
+
+        # Convert NumPy array to PyTorch tensor
+        label_tensor = torch.from_numpy(label_array)
+
+        # Remove the extra dimension using torch.squeeze()
+        label_tensor = label_tensor.squeeze(dim=-1) 
+
+        # Convert type
+        label_tensor = label_tensor.to(dtype=torch.float32)
+
+        return label_tensor
 
     def __getitem__(self, index):
         sample = self.samples[index]
@@ -167,6 +189,8 @@ class VideoDataset(torch.utils.data.Dataset):
 
         # Label/annotations for video
         label = self.labels[index]
+        # kat
+        label_tensor = self.load_label_from_file(label)
 
         def split_into_clips(video):
             """ Split video into a list of clips """
@@ -181,7 +205,8 @@ class VideoDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             buffer = [self.transform(clip) for clip in buffer]
 
-        return buffer, label, clip_indices
+        # kat
+        return buffer, label_tensor, clip_indices
 
     def loadvideo_decord(self, sample):
         """ Load video content using Decord """

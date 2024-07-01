@@ -91,12 +91,15 @@ def launch_evals_with_parsed_args(
         slurm_max_num_timeout=20)
     executor.update_parameters(
         slurm_partition=partition,
-        slurm_mem_per_gpu='55G',
+        slurm_mem='128G',
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
-        cpus_per_task=12,
-        gpus_per_node=tasks_per_node)
+        cpus_per_task=8,
+        gpus_per_node=2,
+	slurm_mail_type='ALL',
+	slurm_mail_user='ki2130@nyu.edu',
+	slurm_job_name='child-video-jepa2')
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
@@ -160,3 +163,5 @@ def launch_evals():
 if __name__ == '__main__':
     args = parser.parse_args()
     launch_evals()
+    print("made it!")
+
