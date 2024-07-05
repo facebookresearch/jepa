@@ -1,0 +1,12 @@
+torch>=2
+torchvision
+pyyaml
+numpy
+opencv-python
+submitit
+braceexpand
+webdataset
+timm
+pandas
+einops
+beartype
