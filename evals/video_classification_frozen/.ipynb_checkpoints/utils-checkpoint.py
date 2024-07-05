@@ -296,8 +296,7 @@ class EvalVideoTransform(object):
         self.short_side_size = short_side_size
         self.spatial_resize = video_transforms.Resize(short_side_size, interpolation='bilinear')
         self.to_tensor = video_transforms.Compose([
-            volume_transforms.ClipToTensor(),
-            video_transforms.Normalize(mean=normalize[0], std=normalize[1])
+            volume_transforms.ClipToTensor()
         ])
 
     def __call__(self, buffer):
