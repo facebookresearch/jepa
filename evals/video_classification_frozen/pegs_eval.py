@@ -353,8 +353,8 @@ def run_one_epoch(
                     outputs = [[classifier(ost) for ost in os] for os in outputs]
                     # print("outputs NOT attend:", outputs[0].shape)
         # print("outputs is:", outputs)
-        print("outputs[0] final shape", outputs[0].shape)
-        print("labels[0] final shape:", labels[0].shape)
+        # print("outputs[0] final shape", outputs[0].shape)
+        # print("labels[0] final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
         # plot_guess_img(outputs[0][0,:], output_filename = 'outputs-0.png')
@@ -368,9 +368,9 @@ def run_one_epoch(
         if attend_across_segments:
             loss = 0 
             for i in range(len(labels)):
-                print("PRINT outputs[0][0:]", outputs[0][0:])
+                # print("PRINT outputs[0][0:]", outputs[0][0:])
                 # print("PRINT 'labels[0]",labels[0])
-                print("PRINT length labels", len(labels))
+                # print("PRINT length labels", len(labels))
                 loss+=criterion(outputs[0][i,:], labels[i].unsqueeze(0))
             loss = loss/len(labels)
             # loss = sum([criterion(o, labels) for o in outputs]) / len(outputs)
@@ -380,11 +380,11 @@ def run_one_epoch(
             # kat
             if attend_across_segments:
                 sum_softmax = 0
-                print("output[0].shape[0]",outputs[0].shape[0])
+                # print("output[0].shape[0]",outputs[0].shape[0])
                 for i in range(outputs[0].shape[0]):
-                    print("PRINT outputs[0][0:]", outputs[0][0:])
+                    # print("PRINT outputs[0][0:]", outputs[0][0:])
                     # print("PRINT 'labels[0]",labels[0])
-                    print("PRINT length labels", len(labels))
+                    # print("PRINT length labels", len(labels))
                     sum_softmax += F.softmax(outputs[0][i,:], dim=0) # no averaging (dividing by len(outputs))
                 outputs = sum_softmax
             
