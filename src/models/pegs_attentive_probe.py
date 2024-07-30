@@ -37,11 +37,11 @@ class PegAttentiveClassifier(nn.Module):
         # print("min after avgpool1d", torch.min(x))
         # print("max after avgpool1d", torch.max(x))
         x = self.adaptivepool(x)
-        print("min after adaptivepool", torch.min(x))
-        print("max after adaptivepool", torch.max(x))
+        # print("min after adaptivepool", torch.min(x))
+        # print("max after adaptivepool", torch.max(x))
         x = self.linear(x)
-        print("min after linear", torch.min(x))
-        print("max after linear", torch.max(x))
+        # print("min after linear", torch.min(x))
+        # print("max after linear", torch.max(x))
         return x
         
         # flattened_x = x.flatten(1,-1)
