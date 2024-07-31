@@ -73,7 +73,7 @@ class Trainer:
 def launch_evals_with_parsed_args(
     args_for_evals,
     submitit_folder,
-    partition='a100_2',
+    # partition='a100_2',
     timeout="48:00:00",
     nodes=1,
     tasks_per_node=1,
@@ -90,7 +90,7 @@ def launch_evals_with_parsed_args(
         folder=os.path.join(submitit_folder, 'job_%j'),
         slurm_max_num_timeout=20)
     executor.update_parameters(
-        slurm_partition=partition,
+        # slurm_partition=partition,
         slurm_mem='128G',
         timeout_min=timeout,
         nodes=nodes,
@@ -153,7 +153,7 @@ def launch_evals():
     launch_evals_with_parsed_args(
         args_for_evals=configs,
         submitit_folder=args.folder,
-        partition=args.partition,
+        # partition=args.partition,
         timeout=args.time,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
