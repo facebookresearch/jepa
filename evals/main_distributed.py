@@ -100,7 +100,7 @@ def launch_evals_with_parsed_args(
 	slurm_mail_type='ALL',
 	slurm_mail_user='ki2130@nyu.edu',
 	slurm_job_name='model-jepa2',
-        slurm_gres='gpu:a100:1')
+        additional_parameters={"gres": "gpu:v100:1"})
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
