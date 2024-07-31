@@ -74,7 +74,7 @@ def launch_evals_with_parsed_args(
     args_for_evals,
     submitit_folder,
     partition='learnlab,learnfair',
-    timeout=4300,
+    timeout=8:00:00,
     nodes=1,
     tasks_per_node=1,
     delay_seconds=10,
@@ -96,10 +96,11 @@ def launch_evals_with_parsed_args(
         nodes=nodes,
         tasks_per_node=tasks_per_node,
         cpus_per_task=8,
-        gpus_per_node=2,
+        gpus_per_node=1,
 	slurm_mail_type='ALL',
 	slurm_mail_user='ki2130@nyu.edu',
-	slurm_job_name='child-video-jepa2')
+	slurm_job_name='model-jepa2',
+        slurm_additional_options='--gres=gpu:a100:1')
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
