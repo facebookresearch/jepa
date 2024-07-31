@@ -74,7 +74,7 @@ def launch_evals_with_parsed_args(
     args_for_evals,
     submitit_folder,
     partition='gpu',
-    timeout="8:00:00",
+    timeout="48:00:00",
     nodes=1,
     tasks_per_node=1,
     delay_seconds=10,
