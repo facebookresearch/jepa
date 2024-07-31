@@ -73,7 +73,7 @@ class Trainer:
 def launch_evals_with_parsed_args(
     args_for_evals,
     submitit_folder,
-    partition='learnlab,learnfair',
+    partition='gpu',
     timeout="8:00:00",
     nodes=1,
     tasks_per_node=1,
@@ -100,7 +100,7 @@ def launch_evals_with_parsed_args(
 	slurm_mail_type='ALL',
 	slurm_mail_user='ki2130@nyu.edu',
 	slurm_job_name='model-jepa2',
-        slurm_additional_parameters={"gres": "gpu:v100:1"})
+        slurm_gres='gpu:v100:1')
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
