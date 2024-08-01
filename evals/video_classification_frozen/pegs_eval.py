@@ -135,7 +135,7 @@ def main(args_eval, resume_preempt=False):
     logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
 
     # -- log/checkpointing paths
-    folder = os.path.join(pretrain_folder, 'video_classification_frozen/')
+    folder = os.path.join(pretrain_folder, 'my-jepa/jepa/' , 'checkpoint-models/')
     if eval_tag is not None:
         folder = os.path.join(folder, eval_tag)
     if not os.path.exists(folder):
