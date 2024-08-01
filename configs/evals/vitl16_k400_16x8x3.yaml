@@ -1,7 +1,7 @@
 
 nodes: 1
 tasks_per_node: 1
-tag: pegs-probe-500
+tag: pegs-probe-300
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
@@ -15,7 +15,7 @@ data:
   frame_step: 4
 optimization:
   attend_across_segments: true
-  num_epochs: 500
+  num_epochs: 300
   resolution: 224
   batch_size: 4
   weight_decay: 0.01
