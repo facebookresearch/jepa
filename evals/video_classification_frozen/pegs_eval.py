@@ -357,10 +357,11 @@ def run_one_epoch(
         # print("labels[0] final shape:", labels[0].shape)
 
         # save output and label as images (comment this out when done testing)
+        # plot_guess_img(outputs[0][0,:], output_filename = 'outputs-0.png')
 
         sigmoid = torch.nn.Sigmoid()
-        sigmoid_outputs = sigmoid(outputs)
-        plot_guess_img(sigmoid_outputs[0][0,:], output_filename = 'outputs-0.png')
+        sigmoid_outputs = sigmoid(outputs[0][0,:])
+        plot_guess_img(sigmoid_outputs, output_filename = 'outputs-0.png')
         plot_guess_img(labels[0], output_filename = 'labels-0.png')
 
         # print("PRINT outputs[0][0:]", outputs[0][0:])
