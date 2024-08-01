@@ -361,6 +361,7 @@ def run_one_epoch(
 
         sigmoid = torch.nn.Sigmoid()
         sigmoid_outputs = sigmoid(outputs[0][0,:])
+        print("sigmoud_outputs shape:", sigmoid_outputs.shape)
         plot_guess_img(sigmoid_outputs, output_filename = 'outputs-0.png')
         plot_guess_img(labels[0], output_filename = 'labels-0.png')
 
