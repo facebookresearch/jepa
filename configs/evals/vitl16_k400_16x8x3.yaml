@@ -1,7 +1,7 @@
 
 nodes: 1
 tasks_per_node: 1
-tag: pegs-probe
+tag: pegs-probe-500
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
