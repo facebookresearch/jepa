@@ -26,5 +26,5 @@ def plot_guess_img(input_tensor, output_filename, reference_img='evals/video_cla
         sizes.append(input_tensor[idx].item() * scale)
 
     plt.scatter(scatter_x, scatter_y, s=sizes, c='green', alpha=0.4)
-    plt.savefig(os.path.join('plots/plots-300', output_filename), bbox_inches='tight', pad_inches=0)
+    plt.savefig(os.path.join('plots/plots-300/', output_filename), bbox_inches='tight', pad_inches=0)
     plt.close()
