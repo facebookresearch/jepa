@@ -15,7 +15,7 @@ data:
   frame_step: 4
 optimization:
   attend_across_segments: true
-  num_epochs: 10
+  num_epochs: 3
   resolution: 224
   batch_size: 4
   weight_decay: 0.01
