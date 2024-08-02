@@ -272,7 +272,8 @@ def main(args_eval, resume_preempt=False):
             scheduler=scheduler,
             wd_scheduler=wd_scheduler,
             data_loader=train_loader,
-            use_bfloat16=use_bfloat16)
+            use_bfloat16=use_bfloat16,
+            training_losses) # Pass the training_losses array
 
         val_acc = run_one_epoch(
             device=device,
@@ -287,14 +288,22 @@ def main(args_eval, resume_preempt=False):
             scheduler=scheduler,
             wd_scheduler=wd_scheduler,
             data_loader=val_loader,
-            use_bfloat16=use_bfloat16)
+            use_bfloat16=use_bfloat16,
+            testing_losses) # Pass the testing_losses array
 
         logger.info('[%5d] train: %.3f test: %.3f' % (epoch + 1, train_acc, val_acc))
         # logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
         if rank == 0:
             csv_logger.log(epoch + 1, train_acc, val_acc)
         save_checkpoint(epoch + 1)
+        
+    # Save the numpy arrays after all epochs
+    np.save('training_losses.npy', training_losses)
+    np.save('testing_losses.npy', testing_losses)
 
+# Initialize numpy arrays outside the function to store losses across all epochs
+training_losses = np.array([])
+testing_losses = np.array([])
 
 def run_one_epoch(
     device,
@@ -310,6 +319,7 @@ def run_one_epoch(
     num_spatial_views,
     num_temporal_views,
     attend_across_segments,
+    loss_array, # add this to keep track of loss
 ):
 
     classifier.train(mode=training)
@@ -408,12 +418,15 @@ def run_one_epoch(
                 optimizer.step()
             optimizer.zero_grad()
             
+    # Append loss to the appropriate numpy array
+    loss_array = np.append(loss_array, loss.item())
+            
     if itr % 20 == 0:
         logger.info('[%5d] (loss: %.3f) [mem: %.2e]'
                     % (itr, loss,
                        torch.cuda.max_memory_allocated() / 1024.**2))
     
-    return loss
+    return loss_array
 
 
 
