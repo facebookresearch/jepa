@@ -18,7 +18,6 @@ from decord import VideoReader, cpu
 
 import torch
 
-from src.datasets.utils.weighted_sampler import DistributedWeightedSampler
 
 _GLOBAL_SEED = 0
 logger = getLogger()
@@ -46,7 +45,7 @@ def make_videodataset(
     duration=None,
     log_dir=None,
 ):
-    dataset = VideoDataset(
+    dataset = VideoNanoDataset(
         data_paths=data_paths,
         datasets_weights=datasets_weights,
         frames_per_clip=frames_per_clip,
@@ -88,7 +87,7 @@ def make_videodataset(
     return dataset, data_loader, dist_sampler
 
 
-class VideoDataset(torch.utils.data.Dataset):
+class VideoNanoDataset(torch.utils.data.Dataset):
     """ Video classification dataset. """
 
     def __init__(

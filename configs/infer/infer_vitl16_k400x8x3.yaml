@@ -1,11 +1,10 @@
-nodes: 8
-tasks_per_node: 8
+nodes: 1
+tasks_per_node: 1
 tag: k400-16x8x3
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
-  dataset_train: /your_path_to_kinetics400_train_csv_file_index.csv
-  dataset_val: /your_path_to_kinetics400_val_csv_file_index.csv
+  dataset_val: /home/your-user/ML-datasets/video_datasets/k400_eval/val/val.csv
   dataset_type: VideoDataset
   num_classes: 400
   frames_per_clip: 16
@@ -16,7 +15,7 @@ optimization:
   attend_across_segments: true
   num_epochs: 20
   resolution: 224
-  batch_size: 4
+  batch_size: 8
   weight_decay: 0.01
   lr: 0.001
   start_lr: 0.001
@@ -24,7 +23,7 @@ optimization:
   warmup: 0.
   use_bfloat16: true
 pretrain:
-  model_name: vit_huge
+  model_name: vit_tiny
   checkpoint_key: target_encoder
   clip_duration: null
   frames_per_clip: 16
@@ -34,6 +33,9 @@ pretrain:
   tight_silu: false
   use_sdpa: true
   patch_size: 16
-  folder: /your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
-  checkpoint: jepa-latest.pth.tar  # name of pretrained model file inside folder
-  write_tag: jepa
+  folder: /home/your-user/ML-models/nano-jepa-checkpoints/
+  checkpoint: nano-jepa-latest.pth.tar
+  classifier: nano-jepa-k400-classification-latest.pth.tar
+  write_tag: jepa-infer
+logging:
+  folder: /home/your-user/ML-logging/infer_logging/

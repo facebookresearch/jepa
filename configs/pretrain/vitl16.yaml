@@ -1,14 +1,12 @@
 app: vjepa
-nodes: 16
-tasks_per_node: 8
+nodes: 1
+tasks_per_node: 1
 data:
   dataset_type: VideoDataset
   datasets:
-    - /your_path_to_kinetics710_csv_file_index.csv
-    - /your_path_to_ssv2_csv_file_index.csv
-    - /your_path_to_howto100m_csv_file_index.csv
+    - /home/your-user/ML-datasets/video_datasets/k400_file_index.csv
   decode_one_clip: true
-  batch_size: 24
+  batch_size: 8
   num_clips: 1
   num_frames: 16
   tubelet_size: 2
@@ -16,7 +14,7 @@ data:
   crop_size: 224
   patch_size: 16
   pin_mem: true
-  num_workers: 12
+  num_workers: 8
   filter_short_videos: false
   clip_duration: null
 data_aug:
@@ -30,7 +28,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /your_absolute_file_path_for_saving_logs_and_checkpoints/
+  folder: /home/your-user/ML-logging/nano-jepa-logging
   write_tag: jepa
 loss:
   loss_exp: 1.0
@@ -68,19 +66,19 @@ meta:
   use_sdpa: true
   dtype: bfloat16
 model:
-  model_name: vit_large
+  model_name: vit_tiny
   pred_depth: 12
   pred_embed_dim: 384
   uniform_power: true
   use_mask_tokens: true
   zero_init_mask_tokens: true
 optimization:
-  ipe: 300
+  ipe: 3
   ipe_scale: 1.25
   clip_grad: 10.0
   weight_decay: 0.04
   final_weight_decay: 0.4
-  epochs: 300
+  epochs: 4
   warmup: 40
   start_lr: 0.0002
   lr: 0.000625
