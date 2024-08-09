@@ -1,5 +1,3 @@
-torch>=2
-torchvision
 pyyaml
 numpy
 opencv-python
@@ -11,3 +9,4 @@ decord
 pandas
 einops
 beartype
+matplotlib

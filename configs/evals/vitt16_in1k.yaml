@@ -1,16 +1,16 @@
-nodes: 8
-tasks_per_node: 8
-tag: places-16f
+nodes: 1
+tasks_per_node: 1
+tag: in1k-16f
 eval_name: image_classification_frozen
 resume_checkpoint: false
 data:
-  root_path: /your_absolute_file_path_to_directory_where_image_datasets_are_stored/
-  image_folder: places205/121517/pytorch/
-  num_classes: 205
+  root_path: /home/your-user/ML-datasets/image_datasets/imagenet-mini/
+  image_folder: n061417
+  num_classes: 10
   resolution: 224
-  dataset_name: Places205
+  dataset_name: ImageNet
 optimization:
-  num_epochs: 20
+  num_epochs: 10
   batch_size: 16
   weight_decay: 0.001
   lr: 0.001
@@ -19,7 +19,7 @@ optimization:
   warmup: 0.
   use_bfloat16: true
 pretrain:
-  model_name: vit_huge
+  model_name: vit_tiny
   checkpoint_key: target_encoder
   clip_duration: null
   frames_per_clip: 16
@@ -29,6 +29,8 @@ pretrain:
   use_silu: false
   tight_silu: false
   patch_size: 16
-  folder: /your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
+  folder: /home/your-user/ML-models/nano-jepa-checkpoints/
   checkpoint: jepa-latest.pth.tar  # name of pretrained model file inside folder
   write_tag: jepa
+logging:
+   folder: /home/your-user/ML-logging/nano-jepa-logging/

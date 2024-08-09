@@ -1,78 +1,62 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
-
-import os
-
-# -- FOR DISTRIBUTED TRAINING ENSURE ONLY 1 DEVICE VISIBLE PER PROCESS
-try:
-    # -- WARNING: IF DOING DISTRIBUTED TRAINING ON A NON-SLURM CLUSTER, MAKE
-    # --          SURE TO UPDATE THIS TO GET LOCAL-RANK ON NODE, OR ENSURE
-    # --          THAT YOUR JOBS ARE LAUNCHED WITH ONLY 1 DEVICE VISIBLE
-    # --          TO EACH PROCESS
-    os.environ['CUDA_VISIBLE_DEVICES'] = os.environ['SLURM_LOCALID']
-except Exception:
-    pass
-
+import argparse
 import copy
+import logging
+import os
+import pprint
 import time
+import datetime
+
 import numpy as np
-
 import torch
-import torch.multiprocessing as mp
 import torch.nn.functional as F
-from torch.nn.parallel import DistributedDataParallel
+import yaml
 
+from app.vjepa.transforms import make_transforms
+from app.vjepa.utils import init_opt, init_video_model
 from src.datasets.data_manager import init_data
-from src.masks.random_tube import MaskCollator as TubeMaskCollator
 from src.masks.multiblock3d import MaskCollator as MB3DMaskCollator
+from src.masks.random_tube import MaskCollator as TubeMaskCollator
 from src.masks.utils import apply_masks
-from src.utils.distributed import init_distributed, AllReduce
-from src.utils.logging import (
-    CSVLogger,
-    gpu_timer,
-    get_logger,
-    grad_logger,
-    adamw_logger,
-    AverageMeter)
+from src.utils.distributed import AllReduce
+from src.utils.logging import get_logger, AverageMeter, grad_logger, adamw_logger, CSVLogger, gpu_timer
 from src.utils.tensors import repeat_interleave_batch
 
-from app.vjepa.utils import (
-    load_checkpoint,
-    init_video_model,
-    init_opt,
-)
-from app.vjepa.transforms import make_transforms
-
-
-# --
-log_timings = True
+# logger frecuency
 log_freq = 10
 checkpoint_freq = 1
-# --
 
-_GLOBAL_SEED = 0
-np.random.seed(_GLOBAL_SEED)
-torch.manual_seed(_GLOBAL_SEED)
-torch.backends.cudnn.benchmark = True
-
-
-logger = get_logger(__name__)
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--fname', type=str,
+    help='name of config file to load',
+    default='configs.yaml')
 
 
-def main(args, resume_preempt=False):
-    # ----------------------------------------------------------------------- #
-    #  PASSED IN PARAMS FROM CONFIG FILE
-    # ----------------------------------------------------------------------- #
+# Example usage
+def execute_training_work(fname):
+    logger = get_logger(force=True)
+    logger.setLevel(logging.INFO)
 
-    # -- META
-    cfgs_meta = args.get('meta')
-    load_model = cfgs_meta.get('load_checkpoint') or resume_preempt
-    r_file = cfgs_meta.get('read_checkpoint', None)
-    seed = cfgs_meta.get('seed', _GLOBAL_SEED)
+    logger.info(f'called-params {fname}')
+
+    # Load config
+    params = None
+    with open(fname, 'r') as y_file:
+        params = yaml.load(y_file, Loader=yaml.FullLoader)
+        logger.info('loaded params...')
+
+    # get a time stamp
+    now = datetime.datetime.now()
+    timestamp_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+    # Log config
+    pprint.PrettyPrinter(indent=4).pprint(params)
+    dump = os.path.join(params['logging']['folder'], timestamp_str + '-params-pretrain.yaml')
+    with open(dump, 'w') as f:
+        yaml.dump(params, f)
+
+    # META
+    cfgs_meta = params['meta']
     save_every_freq = cfgs_meta.get('save_every_freq', -1)
     skip_batches = cfgs_meta.get('skip_batches', -1)
     use_sdpa = cfgs_meta.get('use_sdpa', False)
@@ -89,19 +73,19 @@ def main(args, resume_preempt=False):
         mixed_precision = False
 
     # -- MASK
-    cfgs_mask = args.get('mask')
+    cfgs_mask = params.get('mask')
 
     # -- MODEL
-    cfgs_model = args.get('model')
-    model_name = cfgs_model.get('model_name')
-    pred_depth = cfgs_model.get('pred_depth')
-    pred_embed_dim = cfgs_model.get('pred_embed_dim')
-    uniform_power = cfgs_model.get('uniform_power', True)
-    use_mask_tokens = cfgs_model.get('use_mask_tokens', True)
-    zero_init_mask_tokens = cfgs_model.get('zero_init_mask_tokens', True)
+    cfgs_model = params['model']
+    model_name = params['model']['model_name']
+    pred_depth = params['model']['pred_depth']
+    pred_embed_dim = params['model']['pred_embed_dim']
+    uniform_power = params['model']['uniform_power']
+    use_mask_tokens = params['model']['use_mask_tokens']
+    zero_init_mask_tokens = params['model']['zero_init_mask_tokens']
 
     # -- DATA
-    cfgs_data = args.get('data')
+    cfgs_data = params['data']
     dataset_type = cfgs_data.get('dataset_type', 'videodataset')
     mask_type = cfgs_data.get('mask_type', 'multiblock3d')
     dataset_paths = cfgs_data.get('datasets', [])
@@ -123,20 +107,20 @@ def main(args, resume_preempt=False):
     log_resource_util_data = cfgs_data.get('log_resource_utilization', False)
 
     # -- DATA AUGS
-    cfgs_data_aug = args.get('data_aug')
-    ar_range = cfgs_data_aug.get('random_resize_aspect_ratio', [3/4, 4/3])
+    cfgs_data_aug = params['data_aug']
+    ar_range = cfgs_data_aug.get('random_resize_aspect_ratio', [3 / 4, 4 / 3])
     rr_scale = cfgs_data_aug.get('random_resize_scale', [0.3, 1.0])
     motion_shift = cfgs_data_aug.get('motion_shift', False)
     reprob = cfgs_data_aug.get('reprob', 0.)
     use_aa = cfgs_data_aug.get('auto_augment', False)
 
     # -- LOSS
-    cfgs_loss = args.get('loss')
+    cfgs_loss = params['loss']
     loss_exp = cfgs_loss.get('loss_exp')
     reg_coeff = cfgs_loss.get('reg_coeff')
 
     # -- OPTIMIZATION
-    cfgs_opt = args.get('optimization')
+    cfgs_opt = params['optimization']
     ipe = cfgs_opt.get('ipe', None)
     ipe_scale = cfgs_opt.get('ipe_scale', 1.0)
     clip_grad = cfgs_opt.get('clip_grad', None)
@@ -151,45 +135,33 @@ def main(args, resume_preempt=False):
     betas = cfgs_opt.get('betas', (0.9, 0.999))
     eps = cfgs_opt.get('eps', 1.e-8)
 
-    # -- LOGGING
-    cfgs_logging = args.get('logging')
-    folder = cfgs_logging.get('folder')
-    tag = cfgs_logging.get('write_tag')
+    # meta
+    use_sdpa = params['meta']['use_sdpa']
 
-    # ----------------------------------------------------------------------- #
-    # ----------------------------------------------------------------------- #
-
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.backends.cudnn.benchmark = True
-    try:
-        mp.set_start_method('spawn')
-    except Exception:
-        pass
-
-    # -- init torch distributed backend
-    world_size, rank = init_distributed()
-    logger.info(f'Initialized (rank/world-size) {rank}/{world_size}')
-
-    # -- set device
+    # device
     if not torch.cuda.is_available():
         device = torch.device('cpu')
     else:
         device = torch.device('cuda:0')
         torch.cuda.set_device(device)
 
-    # -- log/checkpointing paths
-    log_file = os.path.join(folder, f'{tag}_r{rank}.csv')
-    latest_file = f'{tag}-latest.pth.tar'
-    latest_path = os.path.join(folder, latest_file)
-    load_path = None
-    if load_model:
-        load_path = os.path.join(folder, r_file) if r_file is not None else latest_path
-        if not os.path.exists(load_path):
-            load_path = None
-            load_model = False
+    logger.info(f'Using device {device}')
+
+    # one cluster node
+    world_size = 1
+    rank = 0
+
+    # -- LOGGING
+    cfgs_logging = params['logging']
+    folder = cfgs_logging.get('folder')
+    tag = cfgs_logging.get('write_tag')
 
     # -- make csv_logger
+
+    log_file = os.path.join(folder, timestamp_str + '-log_file.csv')
+    latest_file = f'{tag}-latest.pth.tar'
+    latest_path = os.path.join(folder, timestamp_str + '-' + latest_file)
+
     csv_logger = CSVLogger(
         log_file,
         ('%d', 'epoch'),
@@ -250,24 +222,24 @@ def main(args, resume_preempt=False):
     # -- init data-loaders/samplers
     (unsupervised_loader,
      unsupervised_sampler) = init_data(
-         data=dataset_type,
-         root_path=dataset_paths,
-         batch_size=batch_size,
-         training=True,
-         clip_len=num_frames,
-         frame_sample_rate=sampling_rate,
-         filter_short_videos=filter_short_videos,
-         decode_one_clip=decode_one_clip,
-         duration=duration,
-         num_clips=num_clips,
-         transform=transform,
-         datasets_weights=datasets_weights,
-         collator=mask_collator,
-         num_workers=num_workers,
-         world_size=world_size,
-         pin_mem=pin_mem,
-         rank=rank,
-         log_dir=folder if log_resource_util_data else None)
+        data=dataset_type,
+        root_path=dataset_paths,
+        batch_size=batch_size,
+        training=True,
+        clip_len=num_frames,
+        frame_sample_rate=sampling_rate,
+        filter_short_videos=filter_short_videos,
+        decode_one_clip=decode_one_clip,
+        duration=duration,
+        num_clips=num_clips,
+        transform=transform,
+        datasets_weights=datasets_weights,
+        collator=mask_collator,
+        num_workers=num_workers,
+        world_size=world_size,
+        pin_mem=pin_mem,
+        rank=rank,
+        log_dir=folder if log_resource_util_data else None)
     try:
         _dlen = len(unsupervised_loader)
     except Exception:  # Different interface for webdataset
@@ -292,42 +264,16 @@ def main(args, resume_preempt=False):
         mixed_precision=mixed_precision,
         betas=betas,
         eps=eps)
-    encoder = DistributedDataParallel(encoder, static_graph=True)
-    predictor = DistributedDataParallel(predictor, static_graph=True)
-    target_encoder = DistributedDataParallel(target_encoder)
+
     for p in target_encoder.parameters():
         p.requires_grad = False
 
     # -- momentum schedule
-    momentum_scheduler = (ema[0] + i*(ema[1]-ema[0])/(ipe*num_epochs*ipe_scale)
-                          for i in range(int(ipe*num_epochs*ipe_scale)+1))
-
+    momentum_scheduler = (ema[0] + i * (ema[1] - ema[0]) / (ipe * num_epochs * ipe_scale)
+                          for i in range(int(ipe * num_epochs * ipe_scale) + 1))
     start_epoch = 0
-    # -- load training checkpoint
-    if load_model or os.path.exists(latest_path):
-        (
-            encoder,
-            predictor,
-            target_encoder,
-            optimizer,
-            scaler,
-            start_epoch,
-        ) = load_checkpoint(
-            r_path=load_path,
-            encoder=encoder,
-            predictor=predictor,
-            target_encoder=target_encoder,
-            opt=optimizer,
-            scaler=scaler)
-        for _ in range(start_epoch * ipe):
-            scheduler.step()
-            wd_scheduler.step()
-            next(momentum_scheduler)
-            mask_collator.step()
 
     def save_checkpoint(epoch, path):
-        if rank != 0:
-            return
         save_dict = {
             'encoder': encoder.state_dict(),
             'predictor': predictor.state_dict(),
@@ -406,6 +352,7 @@ def main(args, resume_preempt=False):
                     _masks_pred.append(_mp)
 
                 return (clips, _masks_enc, _masks_pred)
+
             clips, masks_enc, masks_pred = load_clips()
 
             for _i, m in enumerate(mask_meters):
@@ -414,6 +361,7 @@ def main(args, resume_preempt=False):
             def train_step():
                 _new_lr = scheduler.step()
                 _new_wd = wd_scheduler.step()
+
                 # --
 
                 def forward_target(c):
@@ -441,7 +389,7 @@ def main(args, resume_preempt=False):
                     loss = 0.
                     # Compute loss and accumulate for each mask-enc/mask-pred pair
                     for zi, hi in zip(z, h):
-                        loss += torch.mean(torch.abs(zi - hi)**loss_exp) / loss_exp
+                        loss += torch.mean(torch.abs(zi - hi) ** loss_exp) / loss_exp
                     loss /= len(masks_pred)
                     return loss
 
@@ -455,7 +403,7 @@ def main(args, resume_preempt=False):
                     z = forward_context(clips, h)
                     loss_jepa = loss_fn(z, h)  # jepa prediction loss
                     pstd_z = reg_fn(z)  # predictor variance across patches
-                    loss_reg += torch.mean(F.relu(1.-pstd_z))
+                    loss_reg += torch.mean(F.relu(1. - pstd_z))
                 loss = loss_jepa + reg_coeff * loss_reg
 
                 # Step 2. Backward & step
@@ -484,7 +432,7 @@ def main(args, resume_preempt=False):
                 m = next(momentum_scheduler)
                 with torch.no_grad():
                     for param_q, param_k in zip(encoder.parameters(), target_encoder.parameters()):
-                        param_k.data.mul_(m).add_((1.-m) * param_q.detach().data)
+                        param_k.data.mul_(m).add_((1. - m) * param_q.detach().data)
 
                 return (
                     float(loss),
@@ -496,7 +444,9 @@ def main(args, resume_preempt=False):
                     grad_stats_pred,
                     optim_stats,
                 )
-            (loss, loss_jepa, loss_reg, _new_lr, _new_wd, grad_stats, grad_stats_pred, optim_stats,), gpu_etime_ms = gpu_timer(train_step)
+
+            (loss, loss_jepa, loss_reg, _new_lr, _new_wd, grad_stats, grad_stats_pred,
+             optim_stats,), gpu_etime_ms = gpu_timer(train_step)
             iter_elapsed_time_ms = (time.time() - itr_start_time) * 1000.
             loss_meter.update(loss)
             input_var = float(AllReduce.apply(clips.view(clips.shape[0], -1).var(dim=1).mean(dim=0)))
@@ -538,7 +488,7 @@ def main(args, resume_preempt=False):
                            '[' + ', '.join(['%.1f' % m.avg for m in mask_meters]) + ']',
                            _new_wd,
                            _new_lr,
-                           torch.cuda.max_memory_allocated() / 1024.0**2,
+                           torch.cuda.max_memory_allocated() / 1024.0 ** 2,
                            gpu_time_meter.avg,
                            wall_time_meter.avg))
 
@@ -572,11 +522,13 @@ def main(args, resume_preempt=False):
                                grad_stats_pred.min,
                                grad_stats_pred.max,
                                grad_stats_pred.global_norm))
+
             log_stats()
             assert not np.isnan(loss), 'loss is nan'
 
         # -- Save Checkpoint
         logger.info('avg. loss %.3f' % loss_meter.avg)
+
         # -- Save Last
         if epoch % checkpoint_freq == 0 or epoch == (num_epochs - 1):
             save_checkpoint(epoch + 1, latest_path)
@@ -584,3 +536,8 @@ def main(args, resume_preempt=False):
                 save_every_file = f'{tag}-e{epoch}.pth.tar'
                 save_every_path = os.path.join(folder, save_every_file)
                 save_checkpoint(epoch + 1, save_every_path)
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    execute_training_work(args.fname)

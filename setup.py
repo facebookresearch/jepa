@@ -1,13 +1,7 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
-
-import os
 from setuptools import setup
 
 VERSION = "0.0.1"
+
 
 def get_requirements():
     with open("./requirements.txt") as reqsf:
@@ -17,9 +11,9 @@ def get_requirements():
 
 if __name__ == "__main__":
     setup(
-        name="jepa",
+        name="nano-jepa",
         version=VERSION,
-        description="JEPA research code.",
+        description="nano-JEPA: a Video Joint Embedding Predictive Architecture that runs in a regular computer.",
         python_requires=">=3.9",
         install_requires=get_requirements(),
     )
