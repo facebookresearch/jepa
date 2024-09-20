@@ -8,10 +8,10 @@ nano-JEPA: a Video Joint Embedding Predictive Architecture that runs in a regula
 (base) conda create -n nano-jepa python=3.9 
 (base) conda activate nano-jepa
 
-# GPU hardware
+# Install PyTorch on hardware that contains GPUs
 # (nano-jepa) conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
 
-# CPU only
+# Install PyTorch only using CPUs 
 (nano-jepa) conda install pytorch torchvision torchaudio cpuonly -c pytorch
 
 (nano-jepa) python setup.py install
@@ -52,9 +52,14 @@ Consder usig the [nano-datasets](https://github.com/BHI-Research/nano-datasets) 
         └── val
 ```
 
+## Checkpopints
+
+Here is a list of checkpoints available for experimentation:
+
+
 ## Authors
 
-We are preparing a publication titlted "nano-JEPA: Democratizing Video Understanding with Personal Computers". Please cite us if you use this repo.
+We are preparing a publication titled "nano-JEPA: Democratizing Video Understanding with Personal Computers". Please cite us if you use this repo.
 
 Contributors:
 
