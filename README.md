@@ -17,7 +17,38 @@ nano-JEPA: a Video Joint Embedding Predictive Architecture that runs in a regula
 (nano-jepa) python setup.py install
 ```
 
+## System directories
+
+Consider using the [nano-datasets](https://github.com/BHI-Research/nano-datasets) tool to create your local configuration. Here is how your local filesystem
+should be organized:
+
+```bash
+(base) $ tree -d
+.
+├── image_datasets
+│   ├── imagenet_full_size
+│   ├── imagenet-mini
+└── video_datasets
+    └── k400
+        ├── train
+        └── val
+```
+
+At least, two paths must be provided.
+
+### Dataset location path, k400 dataset example
+
+* A Windows user path: C:\Users\your-user\Documents\ML-datasets\video_datasets\k400\k400_file_index.csv
+* A Linux user path: /home/your-user/Documents/ML-datasets/video_datasets/k400/k400_file_index.csv
+
+### Logging location path
+
+* A Windows user path: C:\Users\your-user\Documents\ML-logging
+* A Linux user path: /home/your-user/Documents/ML-logging
+
 ## Run
+
+A set of config files are provided in this repo. Change the paths ins the *.yaml file using the above guidelines.
 
 ```bash
 # unsupervised training
@@ -36,26 +67,9 @@ nano-JEPA: a Video Joint Embedding Predictive Architecture that runs in a regula
 (nano-jepa)$ python -m evals.eval_features 
 ```
 
-## System directories
-
-Consder usig the [nano-datasets](https://github.com/BHI-Research/nano-datasets) tool to create your local configuration.
-
-```bash
-(base) $ tree -d
-.
-├── image_datasets
-│   ├── imagenet_full_size
-│   ├── imagenet-mini
-└── video_datasets
-    └── k400
-        ├── train
-        └── val
-```
-
 ## Checkpopints
 
 Here is a list of checkpoints available for experimentation:
-
 
 ## Authors
 
