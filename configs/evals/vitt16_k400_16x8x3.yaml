@@ -4,8 +4,8 @@ tag: k400-16x8x3
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
-  dataset_train: /home/your-user/ML-datasets/video_datasets/k400/k400_train_file_index.csv
-  dataset_val: /home/your-user/ML-datasets/video_datasets/k400/k400_val_file_index.csv
+  dataset_train: /home/your-user/ML-datasets/video_datasets/nano-dataset/nano-train.csv
+  dataset_val: /home/your-user/ML-datasets/video_datasets/nano-dataset/nano-val.csv
   dataset_type: VideoDataset
   num_classes: 400
   frames_per_clip: 16
@@ -34,8 +34,8 @@ pretrain:
   tight_silu: false
   use_sdpa: true
   patch_size: 16
-  folder: /home/your-user/ML-models/nano-jepa-checkpoints/
+  folder: /home/your-user/ML-logging/nano-jepa-checkpoints
   checkpoint: jepa-latest.pth.tar
   write_tag: nano-jepa-eval
 logging:
-  folder: /home/your-user/ML-logging/nano-jepa-logging
+  folder: /home/your-user/ML-logging

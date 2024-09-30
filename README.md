@@ -26,8 +26,8 @@ should be organized:
 (base) $ tree -d
 .
 ├── image_datasets
-│   ├── imagenet_full_size
-│   ├── imagenet-mini
+│         ├── imagenet_full_size
+│         ├── imagenet-mini
 └── video_datasets
     └── k400
         ├── train
@@ -52,16 +52,16 @@ A set of config files are provided in this repo. Change the paths ins the *.yaml
 
 ```bash
 # unsupervised training
-(nano-jepa)$ python -m app.train_nano_jepa --fname configs/pretrain/vitl16.yaml
+(nano-jepa)$ python -m app.train_nano_jepa --fname configs/pretrain/vitt.yaml
 
 # video evaluation
 (nano-jepa)$ python -m evals.eval_video_nano_jepa  --fname configs/evals/vitt16_k400_16x8x3.yaml
 
 # image evaluation
-(nano-jepa)$ python -m evals.eval_video_nano_jepa  --fname configs/evals/vitt16_in1k.yaml
+(nano-jepa)$ python -m evals.eval_image_nano_jepa  --fname configs/evals/vitt16_in1k.yaml
 
 # video inference
-(nano-jepa)$ python -m evals.infer_video_classification --fname configs/infer/infer_vitl16_k400x8x3.yaml
+(nano-jepa)$ python -m evals.infer_video_classification --fname configs/infer/infer_vitt_k400x8x3.yaml
 
 # visualize feature (work in progress)
 (nano-jepa)$ python -m evals.eval_features 
@@ -73,14 +73,18 @@ Here is a list of checkpoints available for experimentation:
 
 ## Authors
 
-We are preparing a publication titled "nano-JEPA: Democratizing Video Understanding with Personal Computers". Please cite us if you use this repo.
+Paper: 
+* Title: "nano-JEPA: Democratizing Video Understanding with Personal Computers"
+* Authors: Adrián Rostagno, Javier Iparraguirre, Joel Ermantraut, Lucas Tobio, Segundo Foissac, Santiago Aggio, Guillermo Friedrich
+* Event: XXV WASI – Workshop Agentes y Sistemas Inteligentes, CACIC.
+* Year: 2024.
 
-Contributors:
-
-* Adrián Rostagno
-* Javier Iparraguirre
-* Joel Ermantraut
-* Lucas Tobio
-* Segundo Foissac
-* Santiago Aggio
-* Guillermo Friedrich
+Bibtex:
+```
+@inproceedings{ermantraut2020resolucion,
+     title={nano-JEPA: Democratizing Video Understanding with Personal Computer},
+     author={Adrian Rostagno and Javier Iparraguirre and Joel Ermantraut and Lucas Tobio and Segundo Foissac and Santiago Aggio and Guillermo Friedrich},
+     booktitle={XXV WASI – Workshop Agentes y Sistemas Inteligentes, CACIC},
+     year={2024}
+}
+```

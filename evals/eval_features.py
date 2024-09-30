@@ -136,7 +136,7 @@ def get_pca_map_whole_volume(
     return pca_color
 
 
-with open("configs/pretrain/vitl16.yaml", "r") as y_file:
+with open("configs/pretrain/vitt16.yaml", "r") as y_file:
     args = yaml.load(y_file, Loader=yaml.FullLoader)
 
 # -- set device

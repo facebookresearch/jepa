@@ -4,7 +4,7 @@ tasks_per_node: 1
 data:
   dataset_type: VideoDataset
   datasets:
-    - /home/your-user/ML-datasets/video_datasets/k400_file_index.csv
+    - /home/your-user/ML-datasets/video_datasets/nano-train.csv
   decode_one_clip: true
   batch_size: 8
   num_clips: 1
@@ -28,7 +28,7 @@ data_aug:
   - 1.0
   reprob: 0.0
 logging:
-  folder: /home/your-user/ML-logging/nano-jepa-logging
+  folder: /home/your-user/ML-logging
   write_tag: jepa
 loss:
   loss_exp: 1.0
