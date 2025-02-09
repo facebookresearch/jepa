@@ -121,13 +121,13 @@ def launch():
     # ---------------------------------------------------------------------- #
     # 2. Parse each yaml config file as a dict and place in list
     # ---------------------------------------------------------------------- #
-    nodes, tasks_per_node = None, None
+    nodes, tasks_per_node = 0, 0
     configs = []
     for f in config_fnames:
         with open(f, 'r') as y_file:
             _params = yaml.load(y_file, Loader=yaml.FullLoader)
-            nodes = int(_params.get('nodes'))
-            tasks_per_node = int(_params.get('tasks_per_node'))
+            nodes += int(_params.get('nodes'))
+            tasks_per_node += int(_params.get('tasks_per_node'))
             configs += [_params]
     logger.info(f'Loaded {len(configs)} config files')
     logger.info(f'Running all jobs with {nodes=} / {tasks_per_node=}')
