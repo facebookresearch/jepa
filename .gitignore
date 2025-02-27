@@ -1,2 +1,6 @@
-.*.swp
+*.swp
 *.pyc
+*.csv
+log_k700/
+log_mgh/
+data_csv/
