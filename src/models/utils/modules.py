@@ -154,8 +154,6 @@ class CrossAttention(nn.Module):
             q = (xattn @ v)
 
         q = q.transpose(1, 2).reshape(B, n, C)
-        q = self.proj(q)
-    
         return q
 
 
