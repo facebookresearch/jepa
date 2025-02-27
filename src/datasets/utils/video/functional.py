@@ -94,3 +94,19 @@ def normalize(clip, mean, std, inplace=False):
     clip.sub_(mean[:, None, None, None]).div_(std[:, None, None, None])
 
     return clip
+
+def get_frame_count(video_path):
+    # Create a VideoCapture object
+    cap = cv2.VideoCapture(video_path)
+
+    # Check if video opened successfully
+    if not cap.isOpened():
+        print("Error opening video file")
+        return None
+
+    # Get the total number of frames in the video
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Release the VideoCapture object
+    cap.release()
+
+    return frame_count
