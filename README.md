@@ -330,7 +330,7 @@ For example, suppose we have a directory called ``my_image_datasets``. We would 
 ### Local training
 If you wish to debug your code or setup before launching a distributed training run, we provide the functionality to do so by running the pretraining script locally on a multi-GPU (or single-GPU) machine, however, reproducing our results requires launching distributed training.
 
-The single-machine implementation starts from the [app/main.py](appmain.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
+The single-machine implementation starts from the [app/main.py](app/main.py), which parses the experiment config file and runs the pretraining locally on a multi-GPU (or single-GPU) machine.
 For example, to run V-JEPA pretraining on GPUs "0", "1", and "2" on a local machine using the config [configs/pretrain/vitl16.yaml](configs/pretrain/vitl16.yaml), type the command:
 ```bash
 python -m app.main \
