@@ -1,20 +1,21 @@
-nodes: 8
-tasks_per_node: 8
-tag: k400-16x8x3
+
+nodes: 1
+tasks_per_node: 1
+tag: pegs-probe-300
 eval_name: video_classification_frozen
 resume_checkpoint: false
 data:
-  dataset_train: /your_path_to_kinetics400_train_csv_file_index.csv
-  dataset_val: /your_path_to_kinetics400_val_csv_file_index.csv
+  dataset_train: /scratch/ki2130/my-jepa/jepa/p_dummy.csv
+  dataset_val: /scratch/ki2130/my-jepa/jepa/p_dummy.csv
   dataset_type: VideoDataset
-  num_classes: 400
+  num_classes: 165
   frames_per_clip: 16
   num_segments: 8
   num_views_per_segment: 3
   frame_step: 4
 optimization:
   attend_across_segments: true
-  num_epochs: 20
+  num_epochs: 300
   resolution: 224
   batch_size: 4
   weight_decay: 0.01
@@ -34,6 +35,6 @@ pretrain:
   tight_silu: false
   use_sdpa: true
   patch_size: 16
-  folder: /your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
-  checkpoint: jepa-latest.pth.tar  # name of pretrained model file inside folder
+  folder:  /scratch/ki2130/ #/your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
+  checkpoint: vitl16.pth.tar #jepa-latest.pth.tar  # name of pretrained model file inside folder
   write_tag: jepa

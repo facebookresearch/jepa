@@ -73,8 +73,8 @@ class Trainer:
 def launch_evals_with_parsed_args(
     args_for_evals,
     submitit_folder,
-    partition='learnlab,learnfair',
-    timeout=4300,
+    # partition='a100_2',
+    timeout="48:00:00",
     nodes=1,
     tasks_per_node=1,
     delay_seconds=10,
@@ -90,13 +90,17 @@ def launch_evals_with_parsed_args(
         folder=os.path.join(submitit_folder, 'job_%j'),
         slurm_max_num_timeout=20)
     executor.update_parameters(
-        slurm_partition=partition,
-        slurm_mem_per_gpu='55G',
+        # slurm_partition=partition,
+        slurm_mem='128G',
         timeout_min=timeout,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
-        cpus_per_task=12,
-        gpus_per_node=tasks_per_node)
+        cpus_per_task=8,
+        gpus_per_node=1,
+	slurm_mail_type='ALL',
+	slurm_mail_user='ki2130@nyu.edu',
+	slurm_job_name='model-jepa2')
+        # slurm_additional_parameters={'gres': 'gpu:a100:1'})
 
     if exclude_nodes is not None:
         executor.update_parameters(slurm_exclude=exclude_nodes)
@@ -149,7 +153,7 @@ def launch_evals():
     launch_evals_with_parsed_args(
         args_for_evals=configs,
         submitit_folder=args.folder,
-        partition=args.partition,
+        # partition=args.partition,
         timeout=args.time,
         nodes=nodes,
         tasks_per_node=tasks_per_node,
@@ -160,3 +164,5 @@ def launch_evals():
 if __name__ == '__main__':
     args = parser.parse_args()
     launch_evals()
+    print("made it!")
+

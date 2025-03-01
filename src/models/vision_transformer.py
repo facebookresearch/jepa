@@ -173,7 +173,7 @@ class VisionTransformer(nn.Module):
         if pos_embed is not None:
             x += pos_embed
         B, N, D = x.shape
-
+        # print("pos_embed x shape:", x.shape)
         # Mask away unwanted tokens (if masks provided)
         if masks is not None:
             x = apply_masks(x, masks)
@@ -191,7 +191,9 @@ class VisionTransformer(nn.Module):
 
         if self.norm is not None:
             x = self.norm(x)
-
+        print("shape of encoder:", x.shape)
+        # print("min of encoded", torch.min(x))
+        # print("max of encoded", torch.max(x))
         return x
 
     def interpolate_pos_encoding(self, x, pos_embed):
