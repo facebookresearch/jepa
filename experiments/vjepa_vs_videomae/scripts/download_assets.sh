@@ -23,7 +23,15 @@ download_with_resume() {
   local output="$2"
   local attempt
   for attempt in $(seq 1 30); do
-    if curl --location --fail --continue-at - -o "${output}" "${url}"; then
+    if curl \
+      --location \
+      --fail \
+      --continue-at - \
+      --connect-timeout 30 \
+      --speed-limit 1024 \
+      --speed-time 60 \
+      -o "${output}" \
+      "${url}"; then
       return 0
     fi
     printf 'Download interrupted; resuming attempt %d/30 in 5 seconds.\n' \
