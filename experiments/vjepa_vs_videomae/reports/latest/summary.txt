@@ -1,0 +1,7 @@
+V-JEPA vs VideoMAE - UCF101 official splits 1/2/3
+
+Best mean accuracy: vjepa
+Best mean macro-F1: vjepa
+Fastest model inference: videomae
+Mean accuracy difference (V-JEPA - VideoMAE): +0.1400
+Mean macro-F1 difference (V-JEPA - VideoMAE): +0.1414

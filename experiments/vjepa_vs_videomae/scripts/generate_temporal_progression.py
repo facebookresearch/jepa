@@ -18,6 +18,7 @@ from PIL import Image
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT_DIR = Path(__file__).resolve().parent
 FRACTIONS = [0.25, 0.5, 0.75, 1.0]
+MODEL_LABELS = {"vjepa": "V-JEPA", "videomae": "VideoMAE"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -186,7 +187,7 @@ def _plot(frame: pd.DataFrame, out_dir: Path) -> None:
                 marker="o",
                 linewidth=2,
                 color=color,
-                label=model.upper(),
+                label=MODEL_LABELS[model],
             )
         ax.set_ylim(0, 1.05)
         ax.set_ylabel("True-class confidence")

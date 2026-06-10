@@ -14,6 +14,7 @@ from PIL import Image
 from sklearn.decomposition import PCA
 
 COLORS = {"vjepa": "#2563eb", "videomae": "#f97316"}
+MODEL_LABELS = {"vjepa": "V-JEPA", "videomae": "VideoMAE"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,9 +28,15 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _save(fig: plt.Figure, out_dir: Path, name: str, pdf: bool = False) -> None:
+def _save(
+    fig: plt.Figure,
+    out_dir: Path,
+    name: str,
+    pdf: bool = False,
+    dpi: int = 220,
+) -> None:
     fig.tight_layout()
-    fig.savefig(out_dir / f"{name}.png", dpi=220, bbox_inches="tight")
+    fig.savefig(out_dir / f"{name}.png", dpi=dpi, bbox_inches="tight")
     if pdf:
         fig.savefig(out_dir / f"{name}.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -57,7 +64,7 @@ def _plot_metric_overview(aggregate: pd.DataFrame, out_dir: Path) -> None:
             width,
             yerr=stds,
             capsize=4,
-            label=model.upper(),
+            label=MODEL_LABELS[model],
             color=COLORS[model],
         )
     ax.set_xticks(x, [label for _, label in metrics])
@@ -82,7 +89,7 @@ def _plot_per_class(per_class: pd.DataFrame, out_dir: Path) -> None:
             width,
             yerr=[data.loc[name, "f1_std"] for name in classes],
             capsize=3,
-            label=model.upper(),
+            label=MODEL_LABELS[model],
             color=COLORS[model],
         )
     ax.set_xticks(x, classes, rotation=20, ha="right")
@@ -107,10 +114,10 @@ def _plot_speed_accuracy(aggregate: pd.DataFrame, out_dir: Path) -> None:
             markersize=11,
             capsize=4,
             color=COLORS[model],
-            label=model.upper(),
+            label=MODEL_LABELS[model],
         )
         ax.annotate(
-            model.upper(),
+            MODEL_LABELS[model],
             (row.inference_time_per_video_seconds_mean, row.accuracy_mean),
             xytext=(7, 7),
             textcoords="offset points",
@@ -147,7 +154,7 @@ def _plot_confusions(results_root: Path, split_ids: list[int], out_dir: Path) ->
         ax.set_yticks(range(len(names)), names)
         ax.set_xlabel("Predicted")
         ax.set_ylabel("True")
-        ax.set_title(f"{model.upper()} normalized confusion")
+        ax.set_title(f"{MODEL_LABELS[model]} normalized confusion")
         for i in range(len(names)):
             for j in range(len(names)):
                 ax.text(
@@ -179,7 +186,7 @@ def _plot_pca(features_root: Path, out_dir: Path) -> None:
                 alpha=0.75,
                 label=class_name,
             )
-        ax.set_title(f"{model.upper()} test embeddings (PCA)")
+        ax.set_title(f"{MODEL_LABELS[model]} test embeddings (PCA)")
         ax.set_xlabel("PC1")
         ax.set_ylabel("PC2")
         ax.grid(alpha=0.2)
@@ -226,7 +233,7 @@ def _plot_storyboards(frames_metadata: pd.DataFrame, out_dir: Path) -> None:
                     row.class_name, loc="left", fontsize=10
                 )
     fig.suptitle("Uniform temporal sampling: 8 of 16 extracted frames", y=1.01)
-    _save(fig, out_dir, "video_storyboards")
+    _save(fig, out_dir, "video_storyboards", dpi=150)
 
 
 def _plot_processing_pipeline(out_dir: Path) -> None:
@@ -331,15 +338,39 @@ def _plot_prediction_examples(
             fontsize=9,
         )
     fig.suptitle("Qualitative prediction cases from official split 1", y=1.01)
-    _save(fig, out_dir, "prediction_examples")
+    _save(fig, out_dir, "prediction_examples", dpi=150)
 
 
 def _write_report(
     aggregate: pd.DataFrame,
+    per_class: pd.DataFrame,
+    split_metrics: pd.DataFrame,
     out_dir: Path,
     temporal_available: bool,
 ) -> None:
+    by_model = aggregate.set_index("model_name")
+    vjepa = by_model.loc["vjepa"]
+    videomae = by_model.loc["videomae"]
+    accuracy_delta = float(vjepa["accuracy_mean"] - videomae["accuracy_mean"])
+    macro_f1_delta = float(vjepa["f1_macro_mean"] - videomae["f1_macro_mean"])
+    speed_ratio = float(
+        vjepa["inference_time_per_video_seconds_mean"]
+        / videomae["inference_time_per_video_seconds_mean"]
+    )
+    videomae_classes = per_class.loc[per_class["model_name"].eq("videomae")]
+    hardest = videomae_classes.sort_values("f1_mean").iloc[0]
+    split_table = split_metrics[
+        [
+            "split_id",
+            "model_name",
+            "accuracy",
+            "f1_macro",
+            "top3_accuracy",
+            "inference_time_per_video_seconds",
+        ]
+    ].copy()
     table = aggregate.to_markdown(index=False, floatfmt=".4f")
+    split_table_markdown = split_table.to_markdown(index=False, floatfmt=".4f")
     figures = [
         ("Metric overview", "metrics_overview.png"),
         ("Per-class F1", "per_class_f1.png"),
@@ -358,6 +389,36 @@ def _write_report(
         "",
         "Frozen-feature comparison on five classes and the three official splits.",
         "",
+        "## Protocol",
+        "",
+        "- Official UCF101 splits 1, 2, and 3; seed 42.",
+        "- Five classes, with 60 train and 20 test videos per class and split.",
+        "- Identical 16-frame, 224×224 clips for both frozen backbones.",
+        "- Mean pooling followed by the same StandardScaler + LogisticRegression.",
+        "- Timings measured on Apple MPS after one excluded warm-up pass.",
+        "",
+        "## Key findings",
+        "",
+        f"- V-JEPA accuracy: **{vjepa['accuracy_mean']:.3f} ± "
+        f"{vjepa['accuracy_std']:.3f}**; VideoMAE: "
+        f"**{videomae['accuracy_mean']:.3f} ± "
+        f"{videomae['accuracy_std']:.3f}**.",
+        f"- V-JEPA gains **{accuracy_delta * 100:.1f} percentage points** in "
+        f"accuracy and **{macro_f1_delta * 100:.1f} points** in macro-F1.",
+        f"- VideoMAE is **{speed_ratio:.2f}× faster** at model inference "
+        f"({videomae['inference_time_per_video_seconds_mean']:.3f} s/video "
+        f"versus {vjepa['inference_time_per_video_seconds_mean']:.3f} s/video).",
+        f"- VideoMAE's hardest class is **{hardest['class_name']}** "
+        f"(F1 {hardest['f1_mean']:.3f} ± {hardest['f1_std']:.3f}); "
+        "V-JEPA remains above 0.97 F1 on every class.",
+        "",
+        "> Scope: these conclusions apply to this balanced five-class frozen-feature "
+        "protocol, not to full 101-class fine-tuning.",
+        "",
+        "## Results by split",
+        "",
+        split_table_markdown,
+        "",
         "## Aggregate metrics",
         "",
         table,
@@ -367,6 +428,32 @@ def _write_report(
         markdown.extend([f"## {title}", "", f"![{title}]({filename})", ""])
     report_md = "\n".join(markdown)
     (out_dir / "report.md").write_text(report_md, encoding="utf-8")
+    findings_html = (
+        "<h2>Protocol</h2><ul>"
+        "<li>Official UCF101 splits 1, 2, and 3; seed 42.</li>"
+        "<li>Five classes; 60 train and 20 test videos per class and split.</li>"
+        "<li>Identical 16-frame, 224×224 clips and frozen mean-pooled backbones.</li>"
+        "<li>Same StandardScaler + LogisticRegression; MPS timings after warm-up.</li>"
+        "</ul><h2>Key findings</h2><ul>"
+        f"<li>Accuracy: V-JEPA <strong>{vjepa['accuracy_mean']:.3f} ± "
+        f"{vjepa['accuracy_std']:.3f}</strong>; VideoMAE "
+        f"<strong>{videomae['accuracy_mean']:.3f} ± "
+        f"{videomae['accuracy_std']:.3f}</strong>.</li>"
+        f"<li>V-JEPA gains <strong>{accuracy_delta * 100:.1f} percentage "
+        f"points</strong> in accuracy and <strong>{macro_f1_delta * 100:.1f} "
+        "points</strong> in macro-F1.</li>"
+        f"<li>VideoMAE is <strong>{speed_ratio:.2f}× faster</strong> "
+        f"({videomae['inference_time_per_video_seconds_mean']:.3f} versus "
+        f"{vjepa['inference_time_per_video_seconds_mean']:.3f} s/video).</li>"
+        f"<li>VideoMAE's hardest class is <strong>{html.escape(str(hardest['class_name']))}"
+        f"</strong> (F1 {hardest['f1_mean']:.3f} ± "
+        f"{hardest['f1_std']:.3f}).</li></ul>"
+        "<p class='scope'><strong>Scope:</strong> these conclusions apply to this "
+        "balanced five-class frozen-feature protocol, not full 101-class fine-tuning."
+        "</p><h2>Results by split</h2>"
+        + split_table.to_html(index=False, float_format=lambda value: f"{value:.4f}")
+        + "<h2>Aggregate metrics</h2>"
+    )
     body = "\n".join(
         f"<h2>{html.escape(title)}</h2><img src='{filename}' alt='{html.escape(title)}'>"
         for title, filename in figures
@@ -376,7 +463,9 @@ def _write_report(
         "<style>body{font:16px system-ui;max-width:1100px;margin:40px auto;"
         "color:#0f172a}img{max-width:100%;margin-bottom:32px}"
         "table{border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px}"
+        ".scope{background:#f1f5f9;border-left:4px solid #2563eb;padding:12px}"
         "</style><h1>V-JEPA vs VideoMAE on UCF101</h1>"
+        + findings_html
         + aggregate.to_html(index=False, float_format=lambda value: f"{value:.4f}")
         + body,
         encoding="utf-8",
@@ -394,6 +483,7 @@ def main() -> None:
     per_class = pd.read_csv(
         results_root / "aggregate" / "per_class_aggregate_metrics.csv"
     )
+    split_metrics = pd.read_csv(results_root / "aggregate" / "split_metrics.csv")
     frames_metadata = pd.read_csv(args.frames_metadata)
 
     _plot_metric_overview(aggregate, out_dir)
@@ -407,6 +497,8 @@ def main() -> None:
     _plot_processing_pipeline(out_dir)
     _write_report(
         aggregate,
+        per_class,
+        split_metrics,
         out_dir,
         temporal_available=(out_dir / "temporal_progression.png").is_file(),
     )

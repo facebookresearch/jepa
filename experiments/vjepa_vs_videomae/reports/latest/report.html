@@ -1,0 +1,151 @@
+<!doctype html><meta charset='utf-8'><style>body{font:16px system-ui;max-width:1100px;margin:40px auto;color:#0f172a}img{max-width:100%;margin-bottom:32px}table{border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px}.scope{background:#f1f5f9;border-left:4px solid #2563eb;padding:12px}</style><h1>V-JEPA vs VideoMAE on UCF101</h1><h2>Protocol</h2><ul><li>Official UCF101 splits 1, 2, and 3; seed 42.</li><li>Five classes; 60 train and 20 test videos per class and split.</li><li>Identical 16-frame, 224×224 clips and frozen mean-pooled backbones.</li><li>Same StandardScaler + LogisticRegression; MPS timings after warm-up.</li></ul><h2>Key findings</h2><ul><li>Accuracy: V-JEPA <strong>0.990 ± 0.010</strong>; VideoMAE <strong>0.850 ± 0.044</strong>.</li><li>V-JEPA gains <strong>14.0 percentage points</strong> in accuracy and <strong>14.1 points</strong> in macro-F1.</li><li>VideoMAE is <strong>3.07× faster</strong> (0.484 versus 1.486 s/video).</li><li>VideoMAE's hardest class is <strong>WalkingWithDog</strong> (F1 0.706 ± 0.078).</li></ul><p class='scope'><strong>Scope:</strong> these conclusions apply to this balanced five-class frozen-feature protocol, not full 101-class fine-tuning.</p><h2>Results by split</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>split_id</th>
+      <th>model_name</th>
+      <th>accuracy</th>
+      <th>f1_macro</th>
+      <th>top3_accuracy</th>
+      <th>inference_time_per_video_seconds</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>vjepa</td>
+      <td>1.0000</td>
+      <td>1.0000</td>
+      <td>1.0000</td>
+      <td>1.4629</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>videomae</td>
+      <td>0.8800</td>
+      <td>0.8769</td>
+      <td>0.9900</td>
+      <td>0.4805</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>vjepa</td>
+      <td>0.9900</td>
+      <td>0.9900</td>
+      <td>1.0000</td>
+      <td>1.5039</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>videomae</td>
+      <td>0.8700</td>
+      <td>0.8673</td>
+      <td>1.0000</td>
+      <td>0.4825</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>vjepa</td>
+      <td>0.9800</td>
+      <td>0.9799</td>
+      <td>1.0000</td>
+      <td>1.4911</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>videomae</td>
+      <td>0.8000</td>
+      <td>0.8015</td>
+      <td>0.9800</td>
+      <td>0.4885</td>
+    </tr>
+  </tbody>
+</table><h2>Aggregate metrics</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model_name</th>
+      <th>accuracy_mean</th>
+      <th>accuracy_std</th>
+      <th>balanced_accuracy_mean</th>
+      <th>balanced_accuracy_std</th>
+      <th>f1_macro_mean</th>
+      <th>f1_macro_std</th>
+      <th>f1_weighted_mean</th>
+      <th>f1_weighted_std</th>
+      <th>precision_macro_mean</th>
+      <th>precision_macro_std</th>
+      <th>recall_macro_mean</th>
+      <th>recall_macro_std</th>
+      <th>top3_accuracy_mean</th>
+      <th>top3_accuracy_std</th>
+      <th>inference_time_per_video_seconds_mean</th>
+      <th>inference_time_per_video_seconds_std</th>
+      <th>pipeline_time_per_video_seconds_mean</th>
+      <th>pipeline_time_per_video_seconds_std</th>
+      <th>train_time_seconds_mean</th>
+      <th>train_time_seconds_std</th>
+      <th>feature_dim</th>
+      <th>device_used</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>vjepa</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>0.9908</td>
+      <td>0.0091</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>1.0000</td>
+      <td>0.0000</td>
+      <td>1.4860</td>
+      <td>0.0210</td>
+      <td>1.5300</td>
+      <td>0.0233</td>
+      <td>0.0181</td>
+      <td>0.0018</td>
+      <td>1024</td>
+      <td>mps</td>
+    </tr>
+    <tr>
+      <td>videomae</td>
+      <td>0.8500</td>
+      <td>0.0436</td>
+      <td>0.8500</td>
+      <td>0.0436</td>
+      <td>0.8486</td>
+      <td>0.0411</td>
+      <td>0.8486</td>
+      <td>0.0411</td>
+      <td>0.8607</td>
+      <td>0.0361</td>
+      <td>0.8500</td>
+      <td>0.0436</td>
+      <td>0.9900</td>
+      <td>0.0100</td>
+      <td>0.4838</td>
+      <td>0.0042</td>
+      <td>0.5378</td>
+      <td>0.0049</td>
+      <td>0.0168</td>
+      <td>0.0011</td>
+      <td>768</td>
+      <td>mps</td>
+    </tr>
+  </tbody>
+</table><h2>Metric overview</h2><img src='metrics_overview.png' alt='Metric overview'>
+<h2>Per-class F1</h2><img src='per_class_f1.png' alt='Per-class F1'>
+<h2>Accuracy versus speed</h2><img src='accuracy_vs_speed.png' alt='Accuracy versus speed'>
+<h2>Confusion matrices</h2><img src='confusion_matrices.png' alt='Confusion matrices'>
+<h2>Embedding PCA</h2><img src='embedding_pca.png' alt='Embedding PCA'>
+<h2>Dataset balance</h2><img src='dataset_distribution.png' alt='Dataset balance'>
+<h2>Video storyboards</h2><img src='video_storyboards.png' alt='Video storyboards'>
+<h2>Prediction examples</h2><img src='prediction_examples.png' alt='Prediction examples'>
+<h2>Processing pipeline</h2><img src='processing_pipeline.png' alt='Processing pipeline'>
+<h2>Confidence through time</h2><img src='temporal_progression.png' alt='Confidence through time'>
