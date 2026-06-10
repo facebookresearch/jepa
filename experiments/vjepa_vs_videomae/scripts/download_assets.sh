@@ -53,7 +53,8 @@ fi
 
 missing_class=0
 for class_name in "${CLASSES[@]}"; do
-  if [[ ! -d "${UCF_ROOT}/${class_name}" ]]; then
+  if ! find "${UCF_ROOT}/${class_name}" -maxdepth 1 -type f -name '*.avi' \
+    -print -quit 2>/dev/null | grep -q .; then
     missing_class=1
   fi
 done
@@ -66,16 +67,18 @@ if [[ "${missing_class}" == "1" ]]; then
   mkdir -p "${extraction_root}"
   archive_paths=()
   for class_name in "${CLASSES[@]}"; do
-    archive_paths+=("UCF-101/${class_name}")
+    archive_paths+=("UCF-101/${class_name}/*")
   done
   unar -q -f -o "${extraction_root}" "${ucf_archive}" "${archive_paths[@]}"
   mkdir -p "${UCF_ROOT}"
   for class_name in "${CLASSES[@]}"; do
     source_dir="${extraction_root}/UCF-101/${class_name}"
-    if [[ ! -d "${source_dir}" ]]; then
+    if ! find "${source_dir}" -maxdepth 1 -type f -name '*.avi' \
+      -print -quit 2>/dev/null | grep -q .; then
       printf 'Could not extract class %s from UCF101 archive.\n' "${class_name}" >&2
       exit 1
     fi
+    rm -rf "${UCF_ROOT}/${class_name}"
     mv "${source_dir}" "${UCF_ROOT}/${class_name}"
   done
   rm -rf "${extraction_root}"
