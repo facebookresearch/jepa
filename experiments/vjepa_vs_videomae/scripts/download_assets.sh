@@ -35,9 +35,9 @@ download_with_resume() {
 }
 
 available_kb="$(df -Pk "${REPO_ROOT}" | awk 'NR==2 {print $4}')"
-minimum_kb=$((15 * 1024 * 1024))
+minimum_kb=$((8 * 1024 * 1024))
 if (( available_kb < minimum_kb )); then
-  printf 'At least 15 GiB free is required before download; available: %.1f GiB\n' \
+  printf 'At least 8 GiB free is required before download; available: %.1f GiB\n' \
     "$(awk "BEGIN {print ${available_kb}/1024/1024}")" >&2
   exit 1
 fi
