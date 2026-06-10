@@ -1,0 +1,12 @@
+transformers>=4.40,<5
+accelerate
+numpy
+pandas
+scikit-learn
+tqdm
+opencv-python
+decord; platform_system != "Darwin" or platform_machine != "arm64"
+pyyaml
+matplotlib
+tabulate
+joblib

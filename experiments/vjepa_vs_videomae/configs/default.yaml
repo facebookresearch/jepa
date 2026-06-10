@@ -1,0 +1,39 @@
+experiment:
+  name: vjepa_vs_videomae_ucf101
+  seed: 42
+  split_ids: [1, 2, 3]
+
+paths:
+  ucf_root: data/UCF101
+  official_splits_dir: data/ucfTrainTestlist
+  checkpoint_dir: checkpoints
+  output_root: experiments/vjepa_vs_videomae/outputs
+
+dataset:
+  classes:
+    - ApplyEyeMakeup
+    - Basketball
+    - Biking
+    - Diving
+    - WalkingWithDog
+  train_per_class: 60
+  test_per_class: 20
+  num_frames: 16
+  image_size: 224
+
+videomae:
+  model_name: MCG-NJU/videomae-base
+  device: auto
+  batch_size: 1
+  pooling: mean
+
+vjepa:
+  config: configs/pretrain/vitl16.yaml
+  checkpoint: checkpoints/vitl16.pth.tar
+  device: auto
+  batch_size: 1
+  pooling: mean
+
+linear_probe:
+  classifier: logistic_regression
+  max_iter: 2000

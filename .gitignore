@@ -1,2 +1,12 @@
 .*.swp
 *.pyc
+__pycache__/
+.DS_Store
+.venv/
+*.egg-info/
+
+# Local datasets, checkpoints, caches, and generated experiment artifacts.
+data/
+checkpoints/
+experiments/vjepa_vs_videomae/outputs/*
+!experiments/vjepa_vs_videomae/outputs/.gitkeep

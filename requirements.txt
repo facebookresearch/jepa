@@ -7,7 +7,7 @@ submitit
 braceexpand
 webdataset
 timm
-decord
+decord; platform_system != "Darwin" or platform_machine != "arm64"
 pandas
 einops
 beartype
