@@ -1,4 +1,80 @@
-# V-JEPA: Video Joint Embedding Predictive Architecture
+# V-JEPA vs VideoMAE — A Frozen-Feature Video Representation Comparison
+
+> This repository builds on Meta AI's official **V-JEPA** codebase to run an independent, reproducible
+> benchmark comparing two self-supervised video representation learning methods —
+> **V-JEPA** (latent feature prediction) and **VideoMAE** (masked pixel reconstruction) —
+> under an identical frozen-backbone, linear-probe protocol on UCF101.
+>
+> The base V-JEPA training/eval framework (`app/`, `evals/`, `src/`, `configs/`) is the original
+> Meta AI Research codebase, kept intact and credited below. The comparison study itself lives
+> entirely in [`experiments/vjepa_vs_videomae/`](experiments/vjepa_vs_videomae/README.md).
+
+## TL;DR — what this project shows
+
+A standardized linear probe trained on **frozen** embeddings from each backbone, evaluated on the
+same five UCF101 classes across the three official train/test splits (seed 42, identical 16-frame
+224×224 clips for both models):
+
+| Model | Accuracy | Macro-F1 | Inference time / video |
+|---|---|---|---|
+| **V-JEPA ViT-L/16** | **0.990 ± 0.010** | **0.990 ± 0.010** | 1.486 s |
+| **VideoMAE Base** | 0.850 ± 0.044 | 0.849 ± 0.041 | **0.484 s** |
+
+- V-JEPA's latent feature-prediction representations are **+14.0 points more accurate** and
+  **+14.1 points higher macro-F1** than VideoMAE's pixel-reconstruction representations, on
+  exactly the same frozen-feature/linear-probe protocol.
+- VideoMAE is **~3.1× faster** at inference, trading accuracy for speed.
+- VideoMAE's weakest class is `WalkingWithDog` (F1 0.706 ± 0.078); V-JEPA stays above 0.97 F1 on
+  every class.
+- Findings are scoped to this balanced five-class frozen-feature setup, not full 101-class
+  fine-tuning — see [limitations](experiments/vjepa_vs_videomae/README.md#interpretation-and-limitations).
+
+Full methodology, reproduction scripts, and all generated figures/tables are in
+[`experiments/vjepa_vs_videomae/`](experiments/vjepa_vs_videomae/README.md), with the rendered
+report at [`experiments/vjepa_vs_videomae/reports/latest/report.html`](experiments/vjepa_vs_videomae/reports/latest/report.html).
+
+<p>
+  <img src="experiments/vjepa_vs_videomae/reports/latest/metrics_overview.png" width="45%">
+  <img src="experiments/vjepa_vs_videomae/reports/latest/accuracy_vs_speed.png" width="45%">
+</p>
+<p>
+  <img src="experiments/vjepa_vs_videomae/reports/latest/per_class_f1.png" width="45%">
+  <img src="experiments/vjepa_vs_videomae/reports/latest/confusion_matrices.png" width="45%">
+</p>
+
+## Repository structure
+
+```
+.
+├── experiments/vjepa_vs_videomae/   # ★ the V-JEPA vs VideoMAE comparison study (this project's contribution)
+│   ├── README.md                    #   protocol, setup, reproduction steps, results interpretation
+│   ├── configs/default.yaml         #   experiment configuration
+│   ├── scripts/                     #   setup, feature extraction, probe training, report generation
+│   ├── src/                         #   dataset indexing, metrics, timing, reproducibility utilities
+│   ├── tests/                       #   protocol unit tests
+│   └── reports/latest/              #   versioned figures, tables, and the rendered HTML report
+│
+├── app/        # original V-JEPA pretraining entrypoints (Meta AI codebase)
+├── evals/      # original V-JEPA evaluation entrypoints (Meta AI codebase)
+├── src/        # original V-JEPA model/dataset/masking code (Meta AI codebase)
+└── configs/    # original V-JEPA pretraining/eval configs (Meta AI codebase)
+```
+
+## Reproducing the comparison
+
+```bash
+chmod +x experiments/vjepa_vs_videomae/scripts/*.sh
+experiments/vjepa_vs_videomae/scripts/setup_environment.sh
+experiments/vjepa_vs_videomae/scripts/download_assets.sh
+experiments/vjepa_vs_videomae/scripts/run_full_benchmark.sh
+```
+
+See [`experiments/vjepa_vs_videomae/README.md`](experiments/vjepa_vs_videomae/README.md) for the full
+protocol, override options, and an explanation of every output and report figure.
+
+---
+
+# About the base codebase: V-JEPA
 
 Official PyTorch codebase for the _video joint-embedding predictive architecture_, V-JEPA, a method for self-supervised learning of visual representations from video.
 
@@ -392,12 +468,6 @@ conda create -n jepa python=3.9 pip
 conda activate jepa
 python setup.py install
 ```
-
-## V-JEPA vs VideoMAE comparison
-
-[`experiments/vjepa_vs_videomae/`](experiments/vjepa_vs_videomae/README.md) contains a standalone
-benchmark comparing frozen V-JEPA and VideoMAE representations on UCF101 via a linear probe,
-including scripts to reproduce the full pipeline and pre-generated reports/figures.
 
 ## License
 See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
