@@ -100,6 +100,21 @@ The versionable report is written to `reports/latest/` and includes:
 Open `reports/latest/report.html` for presentation or use the PNG/PDF figures
 individually.
 
+Additional curated figures from extended runs and audits are kept alongside
+`latest/` for slide decks and write-ups:
+
+- `reports/server_10class_latest/` -- the same report figures regenerated for
+  a 10-class extension of the benchmark.
+- `reports/server_10class_external_test/` -- a storyboard from an external
+  (out-of-distribution) video used to sanity-check the 10-class models.
+- `reports/server_10class_protocol_audit/` -- a random-label control showing
+  expected chance-level performance, used to validate the evaluation
+  protocol.
+- `reports/overfitting_audit/` -- train-vs-test accuracy and a regularization
+  sweep used to check the linear probe is not overfitting.
+- `reports/send_curves/` -- a few-shot accuracy curve.
+- `reports/schemas/` -- system and V-JEPA architecture diagrams.
+
 ## Reproducibility
 
 The pipeline records only the information needed to reproduce a run:

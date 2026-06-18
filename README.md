@@ -393,6 +393,12 @@ conda activate jepa
 python setup.py install
 ```
 
+## V-JEPA vs VideoMAE comparison
+
+[`experiments/vjepa_vs_videomae/`](experiments/vjepa_vs_videomae/README.md) contains a standalone
+benchmark comparing frozen V-JEPA and VideoMAE representations on UCF101 via a linear probe,
+including scripts to reproduce the full pipeline and pre-generated reports/figures.
+
 ## License
 See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
 
