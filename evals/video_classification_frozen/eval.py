@@ -77,12 +77,17 @@ def main(args_eval, resume_preempt=False):
     patch_size = args_pretrain.get('patch_size', None)
     pretrain_folder = args_pretrain.get('folder', None)
     ckp_fname = args_pretrain.get('checkpoint', None)
+    classifier_ckp_fname = args_pretrain.get('classifier_checkpoint', None)
     tag = args_pretrain.get('write_tag', None)
     use_sdpa = args_pretrain.get('use_sdpa', True)
     use_SiLU = args_pretrain.get('use_silu', False)
     tight_SiLU = args_pretrain.get('tight_silu', True)
     uniform_power = args_pretrain.get('uniform_power', False)
     pretrained_path = os.path.join(pretrain_folder, ckp_fname)
+    pretrained_classifier_path = (
+        os.path.join(pretrain_folder, classifier_ckp_fname)
+        if classifier_ckp_fname else None)
+    eval_only = classifier_ckp_fname is not None
     # Optional [for Video model]:
     tubelet_size = args_pretrain.get('tubelet_size', 2)
     pretrain_frames_per_clip = args_pretrain.get('frames_per_clip', 1)
@@ -104,7 +109,7 @@ def main(args_eval, resume_preempt=False):
     resolution = args_opt.get('resolution', 224)
     batch_size = args_opt.get('batch_size')
     attend_across_segments = args_opt.get('attend_across_segments', False)
-    num_epochs = args_opt.get('num_epochs')
+    num_epochs = 1 if eval_only else args_opt.get('num_epochs')
     wd = args_opt.get('weight_decay')
     start_lr = args_opt.get('start_lr')
     lr = args_opt.get('lr')
@@ -142,7 +147,7 @@ def main(args_eval, resume_preempt=False):
     latest_path = os.path.join(folder, f'{tag}-latest.pth.tar')
 
     # -- make csv_logger
-    if rank == 0:
+    if rank == 0 and not eval_only:
         csv_logger = CSVLogger(log_file,
                                ('%d', 'epoch'),
                                ('%.5f', 'loss'),
@@ -186,20 +191,53 @@ def main(args_eval, resume_preempt=False):
         num_classes=num_classes,
     ).to(device)
 
-    train_loader = make_dataloader(
-        dataset_type=dataset_type,
-        root_path=train_data_path,
-        resolution=resolution,
-        frames_per_clip=eval_frames_per_clip,
-        frame_step=eval_frame_step,
-        eval_duration=eval_duration,
-        num_segments=eval_num_segments if attend_across_segments else 1,
-        num_views_per_segment=1,
-        allow_segment_overlap=True,
-        batch_size=batch_size,
-        world_size=world_size,
-        rank=rank,
-        training=True)
+    # -- pretrained classifer
+    if eval_only:
+        logger.info(
+            f'Loading classifier checkpoint from {pretrained_classifier_path}')
+
+        classifier_checkpoint = torch.load(
+            pretrained_classifier_path,
+            map_location='cpu'
+        )
+
+        state_dict = classifier_checkpoint['classifier']
+        state_dict = {
+            k.replace('module.', ''): v
+            for k, v in state_dict.items()
+        }
+        msg = classifier.load_state_dict(state_dict)
+
+        logger.info(f'loaded classifier with msg: {msg}')
+        logger.info(
+            'loaded pretrained classifier from epoch: '
+            f'{classifier_checkpoint["epoch"]}\n'
+            f' path: {pretrained_classifier_path}')
+        del classifier_checkpoint
+        logger.info(classifier)
+
+    if not eval_only:
+        train_loader = make_dataloader(
+            dataset_type=dataset_type,
+            root_path=train_data_path,
+            resolution=resolution,
+            frames_per_clip=eval_frames_per_clip,
+            frame_step=eval_frame_step,
+            eval_duration=eval_duration,
+            num_segments=eval_num_segments if attend_across_segments else 1,
+            num_views_per_segment=1,
+            allow_segment_overlap=True,
+            batch_size=batch_size,
+            world_size=world_size,
+            rank=rank,
+            training=True)
+        ipe = len(train_loader)
+        logger.info(f'Dataloader created... iterations per epoch: {ipe}')
+    else:
+        train_loader = None
+        ipe = 0
+        logger.info('Dataloader created... evaluation only')
+
     val_loader = make_dataloader(
         dataset_type=dataset_type,
         root_path=val_data_path,
@@ -214,25 +252,29 @@ def main(args_eval, resume_preempt=False):
         world_size=world_size,
         rank=rank,
         training=False)
-    ipe = len(train_loader)
-    logger.info(f'Dataloader created... iterations per epoch: {ipe}')
 
     # -- optimizer and scheduler
-    optimizer, scaler, scheduler, wd_scheduler = init_opt(
-        classifier=classifier,
-        wd=wd,
-        start_lr=start_lr,
-        ref_lr=lr,
-        final_lr=final_lr,
-        iterations_per_epoch=ipe,
-        warmup=warmup,
-        num_epochs=num_epochs,
-        use_bfloat16=use_bfloat16)
-    classifier = DistributedDataParallel(classifier, static_graph=True)
+    if not eval_only:
+        optimizer, scaler, scheduler, wd_scheduler = init_opt(
+            classifier=classifier,
+            wd=wd,
+            start_lr=start_lr,
+            ref_lr=lr,
+            final_lr=final_lr,
+            iterations_per_epoch=ipe,
+            warmup=warmup,
+            num_epochs=num_epochs,
+            use_bfloat16=use_bfloat16)
+        classifier = DistributedDataParallel(classifier, static_graph=True)
+    else:
+        optimizer = None
+        scaler = None
+        scheduler = None
+        wd_scheduler = None
 
     # -- load training checkpoint
     start_epoch = 0
-    if resume_checkpoint:
+    if resume_checkpoint and not eval_only:
         classifier, optimizer, scaler, start_epoch = load_checkpoint(
             device=device,
             r_path=latest_path,
@@ -258,21 +300,22 @@ def main(args_eval, resume_preempt=False):
 
     # TRAIN LOOP
     for epoch in range(start_epoch, num_epochs):
-        logger.info('Epoch %d' % (epoch + 1))
-        train_acc = run_one_epoch(
-            device=device,
-            training=True,
-            num_temporal_views=eval_num_segments if attend_across_segments else 1,
-            attend_across_segments=attend_across_segments,
-            num_spatial_views=1,
-            encoder=encoder,
-            classifier=classifier,
-            scaler=scaler,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            wd_scheduler=wd_scheduler,
-            data_loader=train_loader,
-            use_bfloat16=use_bfloat16)
+        if not eval_only:
+            logger.info('Epoch %d' % (epoch + 1))
+            train_acc = run_one_epoch(
+                device=device,
+                training=True,
+                num_temporal_views=eval_num_segments if attend_across_segments else 1,
+                attend_across_segments=attend_across_segments,
+                num_spatial_views=1,
+                encoder=encoder,
+                classifier=classifier,
+                scaler=scaler,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                wd_scheduler=wd_scheduler,
+                data_loader=train_loader,
+                use_bfloat16=use_bfloat16)
 
         val_acc = run_one_epoch(
             device=device,
@@ -289,10 +332,13 @@ def main(args_eval, resume_preempt=False):
             data_loader=val_loader,
             use_bfloat16=use_bfloat16)
 
-        logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
-        if rank == 0:
-            csv_logger.log(epoch + 1, train_acc, val_acc)
-        save_checkpoint(epoch + 1)
+        if not eval_only:
+            logger.info('[%5d] train: %.3f%% test: %.3f%%' % (epoch + 1, train_acc, val_acc))
+            if rank == 0:
+                csv_logger.log(epoch + 1, train_acc, val_acc)
+            save_checkpoint(epoch + 1)
+        else:
+            logger.info('test: %.3f%%' % val_acc)
 
 
 def run_one_epoch(
