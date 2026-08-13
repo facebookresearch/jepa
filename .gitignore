@@ -5,5 +5,6 @@ visualizations/__pycache__/
 media/
 visualizations/media/
 visualizations/*.mp4
+!visualizations/VJEPA_Chapters5_6_7_Subtitled.mp4
 visualizations/*.mp3
 visualizations/*.wav
