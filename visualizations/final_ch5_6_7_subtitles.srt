@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:06,500
+The V-JEPA loss function computes the L1 distance between the predicted features and the target features.
+
+2
+00:00:06,500 --> 00:00:13,000
+To train the network effectively, a stop-gradient is applied to the target encoder, preventing the backward flow of gradients.
+
+3
+00:00:13,500 --> 00:00:21,000
+In self-supervised learning, there is a dangerous system flaw called Representation Collapse, where the model outputs a trivial constant solution.
+
+4
+00:00:21,500 --> 00:00:29,000
+V-JEPA mathematically prevents this by updating the target encoder using an Exponential Moving Average.
+
+5
+00:00:29,000 --> 00:00:35,500
+This forces the model to constantly learn rich representations without ever collapsing.
+
+6
+00:00:36,367 --> 00:00:41,367
+To see the superiority of V-JEPA, let's compare it with other major algorithm families.
+
+7
+00:00:41,367 --> 00:00:47,867
+On the Something-Something-v2 dataset, which requires deep understanding of physical motion,
+
+8
+00:00:47,867 --> 00:00:54,867
+V-JEPA achieves 71.2 percent accuracy, completely outperforming VideoMAE, and large image models like DINOv2 and OpenCLIP.
+
+9
+00:00:58,217 --> 00:01:03,717
+Finally, let's look at Attentive Probing.
+
+10
+00:01:03,717 --> 00:01:11,217
+Instead of freezing or fine-tuning the entire network, V-JEPA freezes the representation and trains a lightweight attention-based probe on top.
+
+11
+00:01:11,217 --> 00:01:15,717
+This efficiently extracts task-specific information.
+
+12
+00:01:15,717 --> 00:01:24,217
+In conclusion, V-JEPA sets a new standard for self-supervised video representation learning through spatial-temporal masking, stop-gradients, and exponential moving averages.
