@@ -1,0 +1,8 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/2439331727_702258748_223132457.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_3596623303_3652035332.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_4046863825_105114491.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_2667889054_804410730.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_1017227712_1553496891.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_4039060768_1282945326.mp4'
+file 'file:C:/jepa/jepa/visualizations/media/videos/vjepa_chapter6/1080p60/partial_movie_files/Chapter6Scene/1431311865_259626925_1267944197.mp4'

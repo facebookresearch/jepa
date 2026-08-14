@@ -1,0 +1,242 @@
+1
+00:00:00,000 --> 00:00:06,500
+The mathematical heart of V-JEPA
+is its prediction loss function.
+
+2
+00:00:06,500 --> 00:00:14,000
+We compute the smooth L-1 distance between
+the predicted latent features ŝ_k
+and the target features s_k,
+
+3
+00:00:14,000 --> 00:00:20,000
+averaged over all M masked tokens.
+This is fundamentally different
+from pixel reconstruction —
+
+4
+00:00:20,000 --> 00:00:26,000
+the loss lives entirely in the abstract
+semantic latent space.
+
+5
+00:00:26,000 --> 00:00:33,000
+Now watch the gradient flow
+during backpropagation.
+Gradients propagate backward from the loss
+through the Predictor
+
+6
+00:00:33,000 --> 00:00:39,500
+and into the Context Encoder —
+these two networks actively learn.
+
+7
+00:00:39,500 --> 00:00:47,000
+But when the gradient signal reaches
+the Target Encoder boundary,
+it hits a mathematical wall:
+the stop-gradient operator.
+
+8
+00:00:47,000 --> 00:01:02,000
+This barrier is absolutely essential.
+Without it, the model could trivially
+set both encoders to output the same constant —
+making the loss zero
+without learning anything useful.
+
+9
+00:01:03,000 --> 00:01:10,000
+Without proper safeguards,
+self-supervised learning falls into
+a catastrophic failure mode called
+Representation Collapse.
+
+10
+00:01:10,000 --> 00:01:19,000
+Imagine every possible video input —
+a running athlete, a cooking tutorial,
+a nature documentary —
+being mapped to the exact same output vector.
+
+11
+00:01:19,000 --> 00:01:24,500
+The loss drops to zero,
+yet the model has learned absolutely nothing.
+
+12
+00:01:24,500 --> 00:01:33,500
+V-JEPA escapes this trap through
+two mathematically interlocked mechanisms.
+The stop-gradient cuts the direct path.
+The second mechanism is the
+Exponential Moving Average.
+
+13
+00:01:33,500 --> 00:01:43,000
+Instead of training the Target Encoder directly,
+its weights are updated as a slow,
+momentum-weighted average
+of the Context Encoder weights.
+
+14
+00:01:43,000 --> 00:01:52,500
+The momentum m starts at 0.998
+and gradually increases to 1.0 over training,
+making the target encoder
+progressively more stable.
+
+15
+00:01:52,500 --> 00:02:05,000
+When the Predictor achieves optimality
+under the L-1 loss, the gradient signal
+forces the Context Encoder to minimize
+the Median Absolute Deviation of the targets.
+
+16
+00:02:05,000 --> 00:02:22,000
+This means the encoder is mathematically
+obligated to capture rich, diverse representations —
+collapse becomes provably impossible.
+
+17
+00:02:23,000 --> 00:02:30,000
+Let us place V-JEPA on the
+global benchmark leaderboard.
+
+18
+00:02:30,000 --> 00:02:39,000
+First, Something-Something-v2 —
+the most demanding test of physical motion.
+This dataset requires genuine understanding
+of physical dynamics to succeed.
+
+19
+00:02:39,000 --> 00:02:45,500
+V-JEPA achieves 71.2 percent accuracy
+under the fully frozen evaluation protocol.
+
+20
+00:02:45,500 --> 00:02:56,000
+This is a remarkable 10.0 percentage point
+improvement over VideoMAE,
+11 points over InternVideo,
+21 points over DINOv2,
+
+21
+00:02:56,000 --> 00:03:02,000
+and a stunning 32 points over OpenCLIP.
+
+22
+00:03:02,000 --> 00:03:14,000
+The gap on SSv2 is the most telling result,
+because large image-language models
+that have seen billions of images
+simply cannot understand physical motion.
+
+23
+00:03:14,000 --> 00:03:28,000
+On Kinetics-400, testing appearance and
+context recognition, V-JEPA achieves 82.1 percent,
+again surpassing all video self-supervised baselines.
+
+24
+00:03:29,000 --> 00:03:36,000
+For an absolutely fair comparison,
+consider the controlled experiment.
+
+25
+00:03:36,000 --> 00:03:44,000
+We fix the architecture to identical
+ViT-L/16 models and train both V-JEPA
+and VideoMAE exclusively on Kinetics-400.
+
+26
+00:03:44,000 --> 00:03:53,000
+Under this equal footing, V-JEPA still wins:
+plus 0.7 points on K400,
+plus 0.5 points on SSv2,
+and plus 3.4 points on AVA action detection.
+
+27
+00:03:53,000 --> 00:04:01,000
+But the most striking result is data efficiency.
+V-JEPA achieves this after seeing
+just 210 million training samples.
+
+28
+00:04:01,000 --> 00:04:11,000
+Compare to DINOv2 at 1,900 million — nine times more.
+VideoMAEv2 needs 1,600 million.
+OpenCLIP consumes 39,000 million —
+nearly 200 times more than V-JEPA.
+
+29
+00:04:11,000 --> 00:04:37,000
+V-JEPA is not merely more accurate —
+it is dramatically more sample-efficient
+than any competing approach.
+
+30
+00:04:38,000 --> 00:04:46,000
+To measure representation quality
+with maximum fairness, V-JEPA employs
+the frozen evaluation protocol
+with Attentive Probing.
+
+31
+00:04:46,000 --> 00:04:54,000
+The entire V-JEPA video encoder —
+hundreds of millions of parameters —
+is completely locked.
+Not a single backbone weight is updated.
+
+32
+00:04:54,000 --> 00:05:01,000
+Instead, a lightweight cross-attention probe
+is trained on top.
+
+33
+00:05:01,000 --> 00:05:11,000
+A single learnable query token attends
+across all 1568 spatial-temporal encoder outputs,
+intelligently pooling them into
+one compact task representation.
+
+34
+00:05:11,000 --> 00:05:17,000
+This pooled vector then feeds
+a simple linear classifier.
+
+35
+00:05:17,000 --> 00:05:27,000
+Using this single frozen encoder,
+V-JEPA achieves 77.9 percent on ImageNet-1K
+with absolutely no image fine-tuning,
+
+36
+00:05:27,000 --> 00:05:37,000
+82 percent on Kinetics-400, 71 percent on SSv2,
+and leading results across action localization,
+scene recognition, and fine-grained identification —
+
+37
+00:05:37,000 --> 00:05:45,000
+all without modifying a single
+backbone parameter.
+
+38
+00:05:45,000 --> 00:06:10,000
+V-JEPA has proven the ultimate thesis:
+when a machine learns to predict
+the hidden latent world of video,
+it simultaneously acquires the deepest
+understanding of the entire visual universe.
+
+39
+00:06:10,000 --> 00:06:30,000
+V-JEPA
+Video Joint Embedding Predictive Architecture
+Meta AI Research · ICLR 2024
