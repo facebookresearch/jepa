@@ -181,7 +181,7 @@ class VideoDataset(torch.utils.data.Dataset):
         if self.transform is not None:
             buffer = [self.transform(clip) for clip in buffer]
 
-        return buffer, label, clip_indices
+        return buffer, label, clip_indices, sample
 
     def loadvideo_decord(self, sample):
         """ Load video content using Decord """
