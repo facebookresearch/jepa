@@ -31,4 +31,5 @@ pretrain:
   patch_size: 16
   folder: /your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
   checkpoint: jepa-latest.pth.tar  # name of pretrained model file inside folder
+  classifier_checkpoint: null # path to attentive probe checkpoint, skips training if set
   write_tag: jepa

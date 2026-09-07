@@ -243,6 +243,9 @@ The V-JEPA feature predictions are indeed grounded, and exhibit spatio-temporal 
   </tr>
 </table>
 
+To evaluate these probes directly without retraining, see [Evaluating a pretrained attentive probe](#evaluating-a-pretrained-attentive-probe).
+
+
 ## Code Structure
 
 **Config files:**
@@ -256,8 +259,8 @@ All experiment parameters are specified in config files (as opposed to command-l
 │   ├── main_distributed.py   #   entrypoint for launching app on slurm cluster
 │   └── main.py               #   entrypoint for launching app locally on your machine for debugging
 ├── evals                     # the only place where evaluation of 'apps' are allowed
-│   ├── image_classification  #   training an attentive probe for image classification with frozen backbone
-│   ├── video_classification  #   training an attentive probe for video classification with frozen backbone
+│   ├── image_classification  #   training/evaluating an attentive probe for image classification with frozen backbone
+│   ├── video_classification  #   training/evaluating an attentive probe for video classification with frozen backbone
 │   ├── main_distributed.py   #   entrypoint for launching distributed evaluations on slurm cluster
 │   └── main.py               #   entrypoint for launching evaluations locally on your machine for debugging
 ├── src                       # the package
@@ -381,6 +384,27 @@ python -m evals.main_distributed \
   --folder $path_to_save_stderr_and_stdout \
   --partition $slurm_partition
 ```
+
+
+### Evaluating a pretrained attentive probe
+The evaluations above train an attentive probe on top of the frozen encoder
+before reporting accuracy. If you already have a probe — one you trained
+earlier, or one of the attentive probe checkpoints linked in the tables above —
+you can skip probe training and run evaluation only.
+
+Set `classifier_checkpoint` in the `pretrain` block of the eval config:
+```yaml
+pretrain:
+  folder: /your_absolute_file_path_to_directory_where_pretrained_models_are_contained/
+  checkpoint: jepa-latest.pth.tar                       # frozen encoder
+  classifier_checkpoint: /your_path/k400-probe.pth.tar  # attentive probe
+```
+The path may be absolute, or relative to `folder`. Leaving it `null` (the
+default) trains a fresh probe, as before. `num_epochs` is ignored.
+
+The run loads both checkpoints, makes a single pass over the validation set,
+and logs the top-1 accuracy. Probes trained by this repo are written to
+`<folder>/<eval_name>/<tag>/<write_tag>-latest.pth.tar`.
 
 ---
 
